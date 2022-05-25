@@ -17,13 +17,6 @@ var usersLoginInfo = map[string]User{
 		FollowerCount: 5,
 		IsFollow:      true,
 	},
-	"qingcdma1330": {
-		Id:            0,
-		Name:          "Qing",
-		FollowCount:   1000,
-		FollowerCount: 1,
-		IsFollow:      true,
-	},
 }
 
 var userIdSequence = int64(1)
