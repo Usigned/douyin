@@ -17,6 +17,13 @@ var usersLoginInfo = map[string]User{
 		FollowerCount: 5,
 		IsFollow:      true,
 	},
+	"qingcdma1330": {
+		Id:            1,
+		Name:          "Qing",
+		FollowCount:   100,
+		FollowerCount: 5000,
+		IsFollow:      false,
+	},
 }
 
 var userIdSequence = int64(1)
@@ -65,7 +72,7 @@ func Login(c *gin.Context) {
 
 	if user, exist := usersLoginInfo[token]; exist {
 		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: Response{StatusCode: 0},
+			Response: Response{StatusCode: 0, StatusMsg: "success"},
 			UserId:   user.Id,
 			Token:    token,
 		})
