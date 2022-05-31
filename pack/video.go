@@ -5,7 +5,7 @@ import (
 	"github.com/Usigned/douyin/entity"
 )
 
-func MAuthorId(videoModels []*dao.Video) []int64 {
+func AuthorIds(videoModels []*dao.Video) []int64 {
 	if videoModels != nil {
 		var ids = make([]int64, 0, len(videoModels))
 		for _, videoModel := range videoModels {
@@ -31,7 +31,7 @@ func Video(videoModel *dao.Video) *entity.Video {
 	return nil
 }
 
-func MVideo(videoModels []*dao.Video) []*entity.Video {
+func Videos(videoModels []*dao.Video) []*entity.Video {
 	if videoModels != nil {
 		var videos = make([]*entity.Video, 0, len(videoModels))
 		for _, model := range videoModels {
@@ -42,7 +42,7 @@ func MVideo(videoModels []*dao.Video) []*entity.Video {
 	return nil
 }
 
-func MVideoPtr(videoPtrs []*entity.Video) []entity.Video {
+func VideoPtrs(videoPtrs []*entity.Video) []entity.Video {
 	if videoPtrs != nil {
 		var videos = make([]entity.Video, len(videoPtrs))
 		for i, ptr := range videoPtrs {

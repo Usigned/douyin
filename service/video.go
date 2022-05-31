@@ -58,16 +58,18 @@ func (s *VideoService) FindVideoAfterTime(latestTime int64, limit int) ([]*entit
 		return nil, err
 	}
 
-	userModels, err := dao.NewUserDaoInstance().MQueryUserById(pack.MAuthorId(videoModels))
+	authorIds := pack.AuthorIds(videoModels)
+
+	userModelMap, err := dao.NewUserDaoInstance().MQueryUserById(authorIds)
 	if err != nil {
 		return nil, err
 	}
 
-	users := pack.MUser(userModels)
-	videos := pack.MVideo(videoModels)
+	userMap := pack.MUser(userModelMap)
+	videos := pack.Videos(videoModels)
 
 	for i, video := range videos {
-		video.Author = *users[i]
+		video.Author = userMap[authorIds[i]]
 	}
 
 	return videos, nil
@@ -83,16 +85,18 @@ func (s *VideoService) FindVideoByAuthorId(authorId int64) ([]*entity.Video, err
 	if err != nil {
 		return nil, err
 	}
-	userModels, err := dao.NewUserDaoInstance().MQueryUserById(pack.MAuthorId(videoModels))
+	authorIds := pack.AuthorIds(videoModels)
+
+	userModelMap, err := dao.NewUserDaoInstance().MQueryUserById(authorIds)
 	if err != nil {
 		return nil, err
 	}
 
-	users := pack.MUser(userModels)
-	videos := pack.MVideo(videoModels)
+	userMap := pack.MUser(userModelMap)
+	videos := pack.Videos(videoModels)
 
 	for i, video := range videos {
-		video.Author = *users[i]
+		video.Author = userMap[authorIds[i]]
 	}
 
 	return videos, nil

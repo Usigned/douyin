@@ -39,7 +39,7 @@ func FeedFunc(latestTime string, token string) FeedResponse {
 			StatusCode: 0,
 			StatusMsg:  "success",
 		},
-		VideoList: pack.MVideoPtr(videos),
+		VideoList: pack.VideoPtrs(videos),
 		NextTime:  time.Now().Unix(),
 	}
 }

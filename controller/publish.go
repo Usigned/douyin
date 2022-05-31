@@ -85,7 +85,7 @@ func publishListFunc(token, userId string) VideoListResponse {
 			StatusCode: 0,
 			StatusMsg:  "success",
 		},
-		VideoList: pack.MVideoPtr(videos),
+		VideoList: pack.VideoPtrs(videos),
 	}
 
 }

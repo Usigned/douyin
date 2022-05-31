@@ -24,7 +24,7 @@ func TestVideoService_FindVideoById_Nil(t *testing.T) {
 	assert.Equal(t, video, nil)
 }
 
-func TestVideoService_MFindVideoAfterTime(t *testing.T) {
+func TestVideoService_FindVideoAfterTime(t *testing.T) {
 	videos, err := videoService.FindVideoAfterTime(0, utils.DefaultLimit)
 	assert.Equal(t, err, nil)
 	assert.NotEqual(t, videos, nil)

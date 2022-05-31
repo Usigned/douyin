@@ -46,13 +46,18 @@ func (*UserDao) QueryUserById(id int64) (*User, error) {
 }
 
 // MQueryUserById will return empty array if no user is found
-func (*UserDao) MQueryUserById(ids []int64) ([]*User, error) {
+func (*UserDao) MQueryUserById(ids []int64) (map[int64]User, error) {
 	var users []*User
 	err := db.Where("id in (?)", ids).Find(&users).Error
 	if err != nil {
 		return nil, err
 	}
-	return users, nil
+	var userMap = make(map[int64]User, len(users))
+	for _, user := range users {
+		id := user.Id
+		userMap[id] = *user
+	}
+	return userMap, nil
 }
 
 func (*UserDao) CreateUser(user *User) error {
