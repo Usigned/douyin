@@ -4,7 +4,7 @@ package service
 import (
 	"github.com/Usigned/douyin/dao"
 	"github.com/Usigned/douyin/entity"
-	"github.com/Usigned/douyin/utils"
+	"github.com/Usigned/douyin/pack"
 	"sync"
 )
 
@@ -30,7 +30,7 @@ func (s *UserService) FindUserById(id int64) (*entity.User, error) {
 	}
 
 	// 包装用户信息
-	return utils.PackUser(userModel), nil
+	return pack.PackUser(userModel), nil
 }
 
 func (s *UserService) MFindUserById(ids []int64) ([]*entity.User, error) {
