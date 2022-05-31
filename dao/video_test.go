@@ -18,25 +18,31 @@ func TestVideoDao_QueryVideoById(t *testing.T) {
 	assert.Equal(t, video.Id, int64(1))
 }
 
-func TestVideoDao_MQueryVideoBeforeTime(t *testing.T) {
-	videos, err := videoDao.MQueryVideoBeforeTime(
+func TestVideoDao_QueryVideoBeforeTime(t *testing.T) {
+	videos, err := videoDao.QueryVideoBeforeTime(
 		time.Date(2022, time.Month(5), 30, 1, 5, 0, 0, time.UTC),
 		utils.DefaultLimit)
 	if err != nil {
 		return
 	}
 	assert.Equal(t, len(videos), 1)
-	assert.Equal(t, videos[0].Id, int64(2))
+	assert.Equal(t, videos[0].Id, int64(1))
 }
 
-func TestVideoDao_CreateVideo(t *testing.T) {
-	var video = &Video{
-		AuthorId: 2,
-		PlayUrl:  "12345678.com",
-		CoverUrl: "cover1.com",
-		Title:    "Test Video #1",
-		CreateAt: time.Now(),
-	}
-	err := videoDao.CreateVideo(video)
+//func TestVideoDao_CreateVideo(t *testing.T) {
+//	var video = &Video{
+//		AuthorId: 2,
+//		PlayUrl:  "12345678.com",
+//		CoverUrl: "cover1.com",
+//		Title:    "Test Video #1",
+//		CreateAt: time.Now(),
+//	}
+//	err := videoDao.CreateVideo(video)
+//	assert.Equal(t, err, nil)
+//}
+
+func TestVideoDao_QueryVideoByAuthorId(t *testing.T) {
+	videos, err := videoDao.QueryVideoByAuthorId(1)
 	assert.Equal(t, err, nil)
+	assert.Equal(t, videos[0].AuthorId, int64(1))
 }

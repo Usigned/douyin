@@ -66,6 +66,8 @@ func PublishList(c *gin.Context) {
 }
 
 func publishListFunc(token, userId string) VideoListResponse {
+	// TODO
+	// 使用token进行鉴权
 	if token == "" || userId == "" {
 		return ErrorVideoListResponse(InvalidParameterError{msg: "empty token or user_id"})
 	}
@@ -73,7 +75,7 @@ func publishListFunc(token, userId string) VideoListResponse {
 	if err != nil {
 		return ErrorVideoListResponse(err)
 	}
-	videos, err := service.NewVideoServiceInstance().MFindVideoByAuthorId(uid)
+	videos, err := service.NewVideoServiceInstance().FindVideoByAuthorId(uid)
 	if err != nil {
 		return ErrorVideoListResponse(err)
 	}

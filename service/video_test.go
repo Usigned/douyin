@@ -24,20 +24,28 @@ func TestVideoService_FindVideoById_Nil(t *testing.T) {
 	assert.Equal(t, video, nil)
 }
 
-func TestVideoService_FindVideoAfterTime(t *testing.T) {
+func TestVideoService_MFindVideoAfterTime(t *testing.T) {
 	videos, err := videoService.FindVideoAfterTime(0, utils.DefaultLimit)
 	assert.Equal(t, err, nil)
 	assert.NotEqual(t, videos, nil)
 
 	//assert.Equal(t, len(users), 2)
-	assert.Equal(t, videos[0].Id > videos[1].Id, true)
+	assert.Equal(t, videos[0].Id, int64(2))
+	assert.Equal(t, videos[0].Author.Id, int64(2))
 }
 
-func TestVideoService_FindVideoAfterTime_Empty(t *testing.T) {
+func TestVideoService_MFindVideoAfterTime_Empty(t *testing.T) {
 	users, err := videoService.FindVideoAfterTime(
 		time.Date(1990, time.Month(12), 0, 0, 0, 0, 0, time.UTC).Unix(),
 		utils.DefaultLimit)
 	assert.Equal(t, err, nil)
 	assert.NotEqual(t, users, nil)
 	assert.Equal(t, len(users), 0)
+}
+
+func TestVideoService_MFindVideoByAuthorId(t *testing.T) {
+	videos, err := videoService.FindVideoByAuthorId(1)
+	assert.Equal(t, err, nil)
+	assert.NotEqual(t, videos, nil)
+	assert.Equal(t, len(videos), 1)
 }

@@ -47,8 +47,8 @@ func (*VideoDao) QueryVideoById(id int64) (*Video, error) {
 	return &video, nil
 }
 
-// MQueryVideoBeforeTime will return empty array if no user is found
-func (*VideoDao) MQueryVideoBeforeTime(time time.Time, limit int) ([]*Video, error) {
+// QueryVideoBeforeTime will return empty array if no user is found
+func (*VideoDao) QueryVideoBeforeTime(time time.Time, limit int) ([]*Video, error) {
 	var videos []*Video
 	err := db.Where("create_at < ?", time).Order("create_at DESC").Limit(limit).Find(&videos).Error
 
@@ -61,4 +61,14 @@ func (*VideoDao) MQueryVideoBeforeTime(time time.Time, limit int) ([]*Video, err
 
 func (*VideoDao) CreateVideo(video *Video) error {
 	return db.Create(&video).Error
+}
+
+func (*VideoDao) QueryVideoByAuthorId(authorId int64) ([]*Video, error) {
+	var videos []*Video
+	err := db.Where("author_id = ?", authorId).Find(&videos).Error
+	if err != nil {
+		log.Fatal("batch find video by author_id err:" + err.Error())
+		return nil, err
+	}
+	return videos, nil
 }

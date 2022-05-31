@@ -7,14 +7,14 @@ import (
 
 var _ = Init()
 
-func TestUserDao_CreateUser(t *testing.T) {
-	var user = &User{
-		Name:     "TestUser #1",
-		Password: "123456",
-	}
-	err := userDao.CreateUser(user)
-	assert.Equal(t, err, nil)
-}
+//func TestUserDao_CreateUser(t *testing.T) {
+//	var user = &User{
+//		Name:     "TestUser #1",
+//		Password: "123456",
+//	}
+//	err := userDao.CreateUser(user)
+//	assert.Equal(t, err, nil)
+//}
 
 func TestUserDao_QueryUserById_NotNil(t *testing.T) {
 
@@ -28,7 +28,7 @@ func TestUserDao_QueryUserById_NotNil(t *testing.T) {
 
 func TestUserDao_QueryUserById_Nil(t *testing.T) {
 
-	user, err := userDao.QueryUserById(1)
+	user, err := userDao.QueryUserById(-1)
 	assert.Equal(t, err, nil)
 	assert.Equal(t, user, nil)
 }

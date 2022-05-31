@@ -21,8 +21,8 @@ func NewUserServiceInstance() *UserService {
 	return userService
 }
 
+// FindUserById return nil, nil if no user is found
 func (s *UserService) FindUserById(id int64) (*entity.User, error) {
-	// return nil, nil if no user is found
 	userModel, err := dao.NewUserDaoInstance().QueryUserById(id)
 	if err != nil {
 		return nil, err
@@ -30,8 +30,8 @@ func (s *UserService) FindUserById(id int64) (*entity.User, error) {
 	return pack.User(userModel), nil
 }
 
+// MFindUserById return nil, nil if no user is found
 func (s *UserService) MFindUserById(ids []int64) ([]*entity.User, error) {
-	// return nil, nil if no user is found
 	userModels, err := dao.NewUserDaoInstance().MQueryUserById(ids)
 	if err != nil {
 		return nil, err

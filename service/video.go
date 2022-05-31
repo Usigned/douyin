@@ -53,7 +53,7 @@ func (s *VideoService) FindVideoAfterTime(latestTime int64, limit int) ([]*entit
 		t = time.UnixMilli(latestTime)
 	}
 
-	videoModels, err := dao.NewVideoDaoInstance().MQueryVideoBeforeTime(t, limit)
+	videoModels, err := dao.NewVideoDaoInstance().QueryVideoBeforeTime(t, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -73,6 +73,27 @@ func (s *VideoService) FindVideoAfterTime(latestTime int64, limit int) ([]*entit
 	return videos, nil
 }
 
-func (s *VideoService) MFindVideoByAuthorId(authorId int64) ([]*entity.Video, error) {
-	return nil, nil
+func (s *VideoService) FindVideoByAuthorId(authorId int64) ([]*entity.Video, error) {
+	// invalid authorId
+	if authorId <= 0 {
+		return nil, nil
+	}
+
+	videoModels, err := dao.NewVideoDaoInstance().QueryVideoByAuthorId(authorId)
+	if err != nil {
+		return nil, err
+	}
+	userModels, err := dao.NewUserDaoInstance().MQueryUserById(pack.MAuthorId(videoModels))
+	if err != nil {
+		return nil, err
+	}
+
+	users := pack.MUser(userModels)
+	videos := pack.MVideo(videoModels)
+
+	for i, video := range videos {
+		video.Author = *users[i]
+	}
+
+	return videos, nil
 }
