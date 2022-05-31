@@ -7,6 +7,14 @@ import (
 	"sync/atomic"
 )
 
+type UserNotExistError struct {
+	msg string
+}
+
+func (e UserNotExistError) Error() string {
+	return "user not exist, " + e.msg
+}
+
 // usersLoginInfo use map to store user info, and key is username+password for demo
 // user data will be cleared every time the server starts
 // test data: username=zhanglei, password=douyin
@@ -96,5 +104,20 @@ func UserInfo(c *gin.Context) {
 		c.JSON(http.StatusOK, UserResponse{
 			Response: entity.Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
 		})
+	}
+}
+
+func UserInfoFunc(token, userId string) UserResponse {
+	// TODO
+	// 判断用户是否存在，存在则返回用户信息
+	return UserResponse{}
+}
+
+func ErrorUserResponse(err error) UserResponse {
+	return UserResponse{
+		Response: entity.Response{
+			StatusCode: -1,
+			StatusMsg:  err.Error(),
+		},
 	}
 }

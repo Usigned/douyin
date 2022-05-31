@@ -38,3 +38,16 @@ func (s *UserService) MFindUserById(ids []int64) (map[int64]entity.User, error) 
 	}
 	return pack.MUser(userModels), nil
 }
+
+func (s *UserService) FindTokenByUserId(id int64) (*string, error) {
+	status, err := dao.NewLoginStatusDaoInstance().QueryByUserId(id)
+	if err != nil || status == nil {
+		return nil, err
+	}
+	return &status.Token, nil
+}
+
+func (s UserService) FindUserByToken(token string) (*entity.User, error) {
+	// TODO
+	return nil, nil
+}
