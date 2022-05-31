@@ -22,7 +22,7 @@ func NewVideoServiceInstance() *VideoService {
 	return videoService
 }
 
-func (s VideoService) FindVideoById(id int64) (*entity.Video, error) {
+func (s *VideoService) FindVideoById(id int64) (*entity.Video, error) {
 	videoModel, err := dao.NewVideoDaoInstance().QueryVideoById(id)
 	if err != nil {
 		return nil, err
@@ -45,7 +45,7 @@ func (s VideoService) FindVideoById(id int64) (*entity.Video, error) {
 }
 
 // FindVideoAfterTime return video info packed with user info
-func (s VideoService) FindVideoAfterTime(latestTime int64, limit int) ([]*entity.Video, error) {
+func (s *VideoService) FindVideoAfterTime(latestTime int64, limit int) ([]*entity.Video, error) {
 	var t time.Time
 	if latestTime == 0 {
 		t = time.Now()
@@ -71,4 +71,8 @@ func (s VideoService) FindVideoAfterTime(latestTime int64, limit int) ([]*entity
 	}
 
 	return videos, nil
+}
+
+func (s *VideoService) MFindVideoByAuthorId(authorId int64) ([]*entity.Video, error) {
+	return nil, nil
 }

@@ -29,7 +29,7 @@ func FeedFunc(latestTime string, token string) FeedResponse {
 	videos, err := service.NewVideoServiceInstance().FindVideoAfterTime(timeInt, utils.DefaultLimit)
 	// service层出错
 	if err != nil {
-		return ErrorResponse(err)
+		return ErrorFeedResponse(err)
 	}
 
 	return FeedResponse{
@@ -42,7 +42,7 @@ func FeedFunc(latestTime string, token string) FeedResponse {
 	}
 }
 
-func ErrorResponse(err error) FeedResponse {
+func ErrorFeedResponse(err error) FeedResponse {
 	return FeedResponse{
 		Response: entity.Response{
 			StatusCode: -1,
