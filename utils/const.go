@@ -1,5 +1,8 @@
 package utils
 
-var (
-	DefaultLimit = 10
+type Empty struct {
+}
+
+const (
+	DefaultLimit = 5
 )

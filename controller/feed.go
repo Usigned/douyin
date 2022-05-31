@@ -2,15 +2,13 @@ package controller
 
 import (
 	"github.com/Usigned/douyin/entity"
+	"github.com/Usigned/douyin/pack"
 	"github.com/Usigned/douyin/service"
+	"github.com/Usigned/douyin/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 	"time"
-)
-
-var (
-	userService  = service.NewUserServiceInstance()
-	videoService = service.NewVideoServiceInstance()
 )
 
 type FeedResponse struct {
@@ -21,13 +19,36 @@ type FeedResponse struct {
 
 // Feed use userService and videoService to query data
 func Feed(c *gin.Context) {
+	c.JSON(http.StatusOK, FeedFunc(c.Query("latestTime"), c.Query("token")))
+}
 
-	c.JSON(http.StatusOK, FeedResponse{
+func FeedFunc(latestTime string, token string) FeedResponse {
+
+	timeInt, _ := strconv.ParseInt(latestTime, 10, 64)
+
+	videos, err := service.NewVideoServiceInstance().FindVideoAfterTime(timeInt, utils.DefaultLimit)
+	// service层出错
+	if err != nil {
+		return ErrorResponse(err)
+	}
+
+	return FeedResponse{
 		Response: entity.Response{
 			StatusCode: 0,
 			StatusMsg:  "success",
 		},
-		VideoList: DemoVideos,
+		VideoList: pack.MVideoPtr(videos),
 		NextTime:  time.Now().Unix(),
-	})
+	}
+}
+
+func ErrorResponse(err error) FeedResponse {
+	return FeedResponse{
+		Response: entity.Response{
+			StatusCode: -1,
+			StatusMsg:  err.Error(),
+		},
+		VideoList: nil,
+		NextTime:  time.Now().Unix(),
+	}
 }

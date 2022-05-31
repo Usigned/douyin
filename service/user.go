@@ -3,7 +3,7 @@ package service
 import (
 	"github.com/Usigned/douyin/dao"
 	"github.com/Usigned/douyin/entity"
-	"github.com/Usigned/douyin/utils"
+	"github.com/Usigned/douyin/pack"
 	"sync"
 )
 
@@ -22,17 +22,19 @@ func NewUserServiceInstance() *UserService {
 }
 
 func (s *UserService) FindUserById(id int64) (*entity.User, error) {
+	// return nil, nil if no user is found
 	userModel, err := dao.NewUserDaoInstance().QueryUserById(id)
 	if err != nil {
 		return nil, err
 	}
-	return utils.PackUser(userModel), nil
+	return pack.User(userModel), nil
 }
 
 func (s *UserService) MFindUserById(ids []int64) ([]*entity.User, error) {
+	// return nil, nil if no user is found
 	userModels, err := dao.NewUserDaoInstance().MQueryUserById(ids)
 	if err != nil {
 		return nil, err
 	}
-	return utils.MPackUser(userModels), nil
+	return pack.MUser(userModels), nil
 }

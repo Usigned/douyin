@@ -3,7 +3,7 @@ package service
 import (
 	"github.com/Usigned/douyin/dao"
 	"github.com/Usigned/douyin/entity"
-	"github.com/Usigned/douyin/utils"
+	"github.com/Usigned/douyin/pack"
 	"sync"
 	"time"
 )
@@ -23,11 +23,29 @@ func NewVideoServiceInstance() *VideoService {
 }
 
 func (s VideoService) FindVideoById(id int64) (*entity.Video, error) {
-	var videoModel, err = dao.NewVideoDaoInstance().QueryVideoById(id)
-	return utils.PackVideo(videoModel), err
+	videoModel, err := dao.NewVideoDaoInstance().QueryVideoById(id)
+	if err != nil {
+		return nil, err
+	}
+
+	if videoModel == nil {
+		return nil, nil
+	}
+
+	userModel, err := dao.NewUserDaoInstance().QueryUserById(videoModel.AuthorId)
+	if err != nil {
+		return nil, err
+	}
+
+	user := pack.User(userModel)
+	video := pack.Video(videoModel)
+
+	video.Author = *user
+	return video, nil
 }
 
-func (s VideoService) FindVideoBeforeTime(latestTime int64, limit int) ([]*entity.Video, error) {
+// FindVideoAfterTime return video info packed with user info
+func (s VideoService) FindVideoAfterTime(latestTime int64, limit int) ([]*entity.Video, error) {
 	var t time.Time
 	if latestTime == 0 {
 		t = time.Now()
@@ -35,11 +53,22 @@ func (s VideoService) FindVideoBeforeTime(latestTime int64, limit int) ([]*entit
 		t = time.UnixMilli(latestTime)
 	}
 
-	var videoModels, err = dao.NewVideoDaoInstance().QueryVideoBeforeTime(t, limit)
-
+	videoModels, err := dao.NewVideoDaoInstance().MQueryVideoBeforeTime(t, limit)
 	if err != nil {
 		return nil, err
 	}
 
-	return utils.MPackVideo(videoModels), nil
+	userModels, err := dao.NewUserDaoInstance().MQueryUserById(pack.MAuthorId(videoModels))
+	if err != nil {
+		return nil, err
+	}
+
+	users := pack.MUser(userModels)
+	videos := pack.MVideo(videoModels)
+
+	for i, video := range videos {
+		video.Author = *users[i]
+	}
+
+	return videos, nil
 }
