@@ -1,7 +1,6 @@
 package dao
 
 import (
-	"github.com/Usigned/douyin/entity"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"log"
@@ -25,11 +24,11 @@ func Init() error {
 }
 
 func Migrate() error {
-	err := db.AutoMigrate(&entity.Video{})
+	err := db.AutoMigrate(&Video{})
 	if err != nil {
 		return err
 	}
-	err = db.AutoMigrate(&entity.User{})
+	err = db.AutoMigrate(&User{})
 	if err != nil {
 		return err
 

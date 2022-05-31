@@ -21,43 +21,6 @@ type FeedResponse struct {
 
 // Feed use userService and videoService to query data
 func Feed(c *gin.Context) {
-	//var latestTime int64
-	////var token string
-	//
-	//t, _ := c.GetQuery("latest_time")
-	//latestTime, _ = strconv.ParseInt(t, 10, 64)
-	////token, _ = c.GetQuery("token")
-	//
-	//videos, err := videoService.FindVideoBeforeTime(latestTime, utils.DefaultLimit)
-	//if err != nil {
-	//	c.JSON(http.StatusOK, FeedResponse{
-	//		Response: entity.Response{
-	//			StatusCode: 1,
-	//			StatusMsg:  err.Error(),
-	//		},
-	//		VideoList: nil,
-	//		NextTime:  time.Now().Unix(),
-	//	})
-	//	return
-	//}
-	//
-	//var videoList = make([]entity.Video, 0, len(videos))
-	//for _, video := range videos {
-	//	videoVo := entity.Video{}
-	//	err := videoVo.fromEntity(video)
-	//	if err != nil {
-	//		c.JSON(http.StatusOK, FeedResponse{
-	//			Response: entity.Response{
-	//				StatusCode: 1,
-	//				StatusMsg:  err.Error(),
-	//			},
-	//			VideoList: nil,
-	//			NextTime:  time.Now().Unix(),
-	//		})
-	//		return
-	//	}
-	//	videoList = append(videoList, videoVo)
-	//}
 
 	c.JSON(http.StatusOK, FeedResponse{
 		Response: entity.Response{
