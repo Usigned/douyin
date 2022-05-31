@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/Usigned/douyin/dao"
 	"github.com/Usigned/douyin/entity"
+	"github.com/Usigned/douyin/utils"
 	"sync"
 	"time"
 )
@@ -22,7 +23,8 @@ func NewVideoServiceInstance() *VideoService {
 }
 
 func (s VideoService) FindVideoById(id int64) (*entity.Video, error) {
-	return dao.NewVideoDaoInstance().QueryVideoById(id)
+	var videoModel, err = dao.NewVideoDaoInstance().QueryVideoById(id)
+	return utils.PackVideo(videoModel), err
 }
 
 func (s VideoService) FindVideoBeforeTime(latestTime int64, limit int) ([]*entity.Video, error) {
@@ -30,7 +32,14 @@ func (s VideoService) FindVideoBeforeTime(latestTime int64, limit int) ([]*entit
 	if latestTime == 0 {
 		t = time.Now()
 	} else {
-		t = time.Unix(latestTime, 0)
+		t = time.UnixMilli(latestTime)
 	}
-	return dao.NewVideoDaoInstance().QueryVideoBeforeTime(t, limit)
+
+	var videoModels, err = dao.NewVideoDaoInstance().QueryVideoBeforeTime(t, limit)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return utils.MPackVideo(videoModels), nil
 }

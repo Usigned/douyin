@@ -1,11 +1,20 @@
 package dao
 
 import (
-	"github.com/Usigned/douyin/entity"
 	"gorm.io/gorm"
 	"log"
 	"sync"
 )
+
+type User struct {
+	Id            int64
+	Name          string
+	Password      string
+	FollowCount   int64
+	FollowerCount int64
+	VideoCount    int64
+	LikeCount     int64
+}
 
 type UserDao struct {
 }
@@ -22,8 +31,8 @@ func NewUserDaoInstance() *UserDao {
 	return userDao
 }
 
-func (*UserDao) QueryUserById(id int64) (*entity.User, error) {
-	var user entity.User
+func (*UserDao) QueryUserById(id int64) (*User, error) {
+	var user User
 	err := db.Where("id = ?", id).First(&user).Error
 	if err == gorm.ErrRecordNotFound {
 		return nil, nil
@@ -35,16 +44,6 @@ func (*UserDao) QueryUserById(id int64) (*entity.User, error) {
 	return &user, nil
 }
 
-func (*UserDao) MQueryUserById(ids []int64) (map[int64]*entity.User, error) {
-	var users []*entity.User
-	err := db.Where("id in (?)", ids).Find(&users).Error
-	if err != nil {
-		log.Fatal("batch find user by id err:" + err.Error())
-		return nil, err
-	}
-	userMap := make(map[int64]*entity.User)
-	for _, user := range users {
-		userMap[user.Id] = user
-	}
-	return userMap, nil
+func (*UserDao) MQueryUserById(ids []int64) ([]*User, error) {
+	return nil, nil
 }

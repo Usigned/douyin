@@ -8,6 +8,15 @@ import (
 	"time"
 )
 
+type Video struct {
+	Id       int64
+	AuthorId int64
+	PlayUrl  string
+	CoverUrl string
+	Title    string
+	CreateAt time.Time
+}
+
 type VideoDao struct {
 }
 
@@ -23,8 +32,8 @@ func NewVideoDaoInstance() *VideoDao {
 	return videoDao
 }
 
-func (*VideoDao) QueryVideoById(id int64) (*entity.Video, error) {
-	var video entity.Video
+func (*VideoDao) QueryVideoById(id int64) (*Video, error) {
+	var video Video
 	err := db.Where("id = ?", id).First(&video).Error
 	if err == gorm.ErrRecordNotFound {
 		return nil, nil
@@ -36,7 +45,7 @@ func (*VideoDao) QueryVideoById(id int64) (*entity.Video, error) {
 	return &video, nil
 }
 
-func (*VideoDao) QueryVideoBeforeTime(time time.Time, limit int) ([]*entity.Video, error) {
+func (*VideoDao) QueryVideoBeforeTime(time time.Time, limit int) ([]*Video, error) {
 	var videos []*entity.Video
 	err := db.Where("create_at < ?", time).Order("create_at DESC").Limit(limit).Find(&videos).Error
 
@@ -44,5 +53,5 @@ func (*VideoDao) QueryVideoBeforeTime(time time.Time, limit int) ([]*entity.Vide
 		log.Fatal("batch find video before time err:" + err.Error())
 		return nil, err
 	}
-	return videos, nil
+	return nil, nil
 }
