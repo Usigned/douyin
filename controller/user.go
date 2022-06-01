@@ -2,8 +2,10 @@ package controller
 
 import (
 	"github.com/Usigned/douyin/entity"
+	"github.com/Usigned/douyin/service"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 	"sync/atomic"
 )
 
@@ -92,25 +94,48 @@ func Login(c *gin.Context) {
 	}
 }
 
+// UserInfo /douyin/user
 func UserInfo(c *gin.Context) {
-	token := c.Query("token")
-
-	if user, exist := usersLoginInfo[token]; exist {
-		c.JSON(http.StatusOK, UserResponse{
-			Response: entity.Response{StatusCode: 0},
-			User:     user,
-		})
-	} else {
-		c.JSON(http.StatusOK, UserResponse{
-			Response: entity.Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
-		})
-	}
+	//token := c.Query("token")
+	//
+	//if user, exist := usersLoginInfo[token]; exist {
+	//	c.JSON(http.StatusOK, UserResponse{
+	//		Response: entity.Response{StatusCode: 0},
+	//		User:     user,
+	//	})
+	//} else {
+	//	c.JSON(http.StatusOK, UserResponse{
+	//		Response: entity.Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
+	//	})
+	//}
+	c.JSON(http.StatusOK, UserInfoFunc(
+		c.Query("token"),
+		c.Query("user_id"),
+	))
 }
 
 func UserInfoFunc(token, userId string) UserResponse {
 	// TODO
 	// 判断用户是否存在，存在则返回用户信息
-	return UserResponse{}
+	uid, err := strconv.ParseInt(userId, 10, 64)
+	if err != nil {
+		return ErrorUserResponse(err)
+	}
+
+	user, err := service.NewUserServiceInstance().FindUserById(uid)
+	if err != nil {
+		return ErrorUserResponse(err)
+	}
+	if user == nil {
+		return ErrorUserResponse(UserNotExistError{msg: "user_id" + userId + "not exist"})
+	}
+	return UserResponse{
+		Response: entity.Response{
+			StatusCode: 0,
+			StatusMsg:  "success",
+		},
+		User: *user,
+	}
 }
 
 func ErrorUserResponse(err error) UserResponse {
