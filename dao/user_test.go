@@ -52,3 +52,10 @@ func TestUserDao_MQueryUserById_Empty(t *testing.T) {
 	assert.NotEqual(t, users, nil)
 	assert.Equal(t, len(users), 0)
 }
+
+func TestUserDao_QueryUserByName(t *testing.T) {
+	user, err := userDao.QueryUserByName("qing")
+	assert.Equal(t, err, nil)
+	assert.NotEqual(t, user, nil)
+	assert.Equal(t, user.Id, int64(1))
+}

@@ -51,3 +51,16 @@ func (s UserService) FindUserByToken(token string) (*entity.User, error) {
 	// TODO
 	return nil, nil
 }
+
+func (s UserService) FindUserByName(name string) (*entity.User, error) {
+	user, err := dao.NewUserDaoInstance().QueryUserByName(name)
+	if err != nil || user == nil {
+		return nil, err
+	}
+	return pack.User(user), nil
+}
+
+func (s UserService) AddUser(username, password string) error {
+	// TODO
+	return nil
+}

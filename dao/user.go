@@ -63,3 +63,16 @@ func (*UserDao) MQueryUserById(ids []int64) (map[int64]User, error) {
 func (*UserDao) CreateUser(user *User) error {
 	return db.Create(&user).Error
 }
+
+func (*UserDao) QueryUserByName(name string) (*User, error) {
+	var user *User
+	err := db.Where("name = ?", name).First(&user).Error
+	if err == gorm.ErrRecordNotFound {
+		return nil, nil
+	}
+	if err != nil {
+		log.Fatal("find user by name err:" + err.Error())
+		return nil, err
+	}
+	return user, nil
+}
