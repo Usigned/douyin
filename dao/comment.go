@@ -9,6 +9,7 @@ import (
 
 type Comment struct {
 	Id       int64
+	VideoId  int64
 	UserName string
 	Content  string
 	CreateAt string
@@ -57,19 +58,32 @@ func (d *CommentDao) Save(comment *Comment) error {
 	return nil
 }
 
-func (d *CommentDao) DeleteCommentById(id int64) error {
-	result := db.Where("id = ?", id).Delete(&Comment{})
+func (d *CommentDao) DeleteCommentById(id int64) (int64, error) {
+	var comment *Comment
+	result := db.Where("id = ?", id).Delete(&comment)
 	err := result.Error
 	if err != nil {
-		return err
+		return -1, err
 	}
-	return nil
+	return comment.VideoId, nil
 }
 
 func (d *CommentDao) Total() (int64, error) {
 	// 获取全部记录
 	var count int64
 	result := db.Table("comments").Count(&count)
+	err := result.Error
+	if err != nil {
+		log.Fatal("total user err:" + err.Error())
+		return -1, err
+	}
+	return count, nil
+}
+
+func (d *CommentDao) TotalById(id int64) (int64, error) {
+	// 获取全部记录
+	var count int64
+	result := db.Table("comments").Where("video_id = ?", id).Count(&count)
 	err := result.Error
 	if err != nil {
 		log.Fatal("total user err:" + err.Error())

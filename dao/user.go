@@ -47,6 +47,21 @@ func (*UserDao) QueryUserById(id int64) (*User, error) {
 	return user, nil
 }
 
+// MQueryUserById will return empty array if no user is found
+func (*UserDao) MQueryUserById(ids []int64) (map[int64]User, error) {
+	var users []*User
+	err := db.Where("id in (?)", ids).Find(&users).Error
+	if err != nil {
+		return nil, err
+	}
+	var userMap = make(map[int64]User, len(users))
+	for _, user := range users {
+		id := user.Id
+		userMap[id] = *user
+	}
+	return userMap, nil
+}
+
 func (*UserDao) QueryUserByName(name string) (*User, error) {
 	var user *User //实例化对象
 	result := db.Where("name = ?", name).First(&user)
@@ -59,10 +74,6 @@ func (*UserDao) QueryUserByName(name string) (*User, error) {
 		return nil, err
 	}
 	return user, nil
-}
-
-func (*UserDao) MQueryUserById(ids []int64) ([]*User, error) {
-	return nil, nil
 }
 
 func (*UserDao) Save(user *User) error {

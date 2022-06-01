@@ -22,15 +22,37 @@ func NewUserServiceInstance() *UserService {
 	return userService
 }
 
+// FindUserById return nil if no user is found
 func (s *UserService) FindUserById(id int64) (*entity.User, error) {
 	// 查询用户信息
 	userModel, err := dao.NewUserDaoInstance().QueryUserById(id)
 	if err != nil {
 		return nil, err
 	}
-
 	// 包装用户信息
 	return pack.User(userModel), nil
+}
+
+// MFindUserById return empty map if no user is found
+func (s *UserService) MFindUserById(ids []int64) (map[int64]entity.User, error) {
+	userModels, err := dao.NewUserDaoInstance().MQueryUserById(ids)
+	if err != nil {
+		return nil, err
+	}
+	return pack.MUser(userModels), nil
+}
+
+func (s *UserService) FindTokenByUserId(id int64) (*string, error) {
+	status, err := dao.NewLoginStatusDaoInstance().QueryByUserId(id)
+	if err != nil || status == nil {
+		return nil, err
+	}
+	return &status.Token, nil
+}
+
+func (s UserService) FindUserByToken(token string) (*entity.User, error) {
+	// TODO
+	return nil, nil
 }
 
 func (s *UserService) FindUserByName(name string) (*entity.User, error) {
@@ -42,10 +64,6 @@ func (s *UserService) FindUserByName(name string) (*entity.User, error) {
 
 	// 包装用户信息
 	return pack.User(userModel), nil
-}
-
-func (s *UserService) MFindUserById(ids []int64) ([]*entity.User, error) {
-	return nil, nil
 }
 
 func (s *UserService) SaveUser(user *dao.User) error {

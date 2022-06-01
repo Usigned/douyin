@@ -27,7 +27,6 @@ func FeedFunc(latestTime string, token string) FeedResponse {
 	// 使用token鉴权
 
 	timeInt, _ := strconv.ParseInt(latestTime, 10, 64)
-
 	videos, err := service.NewVideoServiceInstance().FindVideoAfterTime(timeInt, utils.DefaultLimit)
 	// service层出错
 	if err != nil {

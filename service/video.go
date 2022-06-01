@@ -65,11 +65,18 @@ func (s *VideoService) FindVideoAfterTime(latestTime int64, limit int) ([]*entit
 		return nil, err
 	}
 
+	//commentCount, err := dao.NewCommentDaoInstance().TotalById()
+	if err != nil {
+		return nil, err
+	}
+
 	userMap := pack.MUser(userModelMap)
 	videos := pack.Videos(videoModels)
 
 	for i, video := range videos {
 		video.Author = userMap[authorIds[i]]
+		video.CommentCount, _ = dao.NewCommentDaoInstance().TotalById(int64(i + 1))
+		dao.NewVideoDaoInstance().UpdateCommentByID(int64(i+1), video.CommentCount)
 	}
 
 	return videos, nil

@@ -32,30 +32,27 @@ func CommentAction(c *gin.Context) {
 	// 先查缓存
 	if user, exist := usersLoginInfo[token]; exist {
 		if actionType == "1" {
+			videoId, _ := strconv.ParseInt(c.Query("video_id"), 10, 64)
 			text := c.Query("comment_text")
 			date := time.Now().Format("01-02")
-
 			commentIdSequence, _ := commentService.LastId()
 			fmt.Println("id is:", commentIdSequence)
 			atomic.AddInt64(&commentIdSequence, 1)
-
-			testComment := entity.Comment{
-				Id:         commentIdSequence,
-				User:       user,
-				Content:    text,
-				CreateDate: date,
-			}
 			var curComment = dao.Comment{
 				Id:       commentIdSequence,
+				VideoId:  videoId,
 				UserName: user.Name,
 				Content:  text,
 				CreateAt: time.Now().Format("01-02"),
 			}
-
 			commentService.CommentAction(&curComment)
-
 			c.JSON(http.StatusOK, CommentActionResponse{Response: entity.Response{StatusCode: 0},
-				Comment: testComment})
+				Comment: entity.Comment{
+					Id:         commentIdSequence,
+					User:       user,
+					Content:    text,
+					CreateDate: date,
+				}})
 			return
 		} else if actionType == "2" {
 			// 删除评论

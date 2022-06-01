@@ -72,3 +72,26 @@ func (*VideoDao) QueryVideoByAuthorId(authorId int64) ([]*Video, error) {
 	}
 	return videos, nil
 }
+
+//func (*VideoDao) AddIntCommentById(id int64) error {
+//	err := db.Model(&Video{}).Where("id = ?", id).UpdateColumn("comment_count", gorm.Expr("comment_count + ?", 1)).Error
+//	if err != nil{
+//		return err
+//	}
+//	return nil
+//}
+//
+//func (*VideoDao) MinusIntCommentById(id int64) error {
+//	err := db.Model(&Video{}).Where("id = ?", id).UpdateColumn("comment_count", gorm.Expr("comment_count - ?", 1)).Error
+//	if err != nil{
+//		return err
+//	}
+//	return nil
+//}
+func (*VideoDao) UpdateCommentByID(id int64, count int64) error {
+	err := db.Model(&Video{}).Where("id = ?", id).UpdateColumn("comment_count", count).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}

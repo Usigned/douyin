@@ -9,10 +9,10 @@ func main() {
 	r := gin.Default()
 
 	initRouter(r)
-	err := dao.Init(true)
-	if err != nil {
-		println(err.Error())
-	}
+	//err := dao.Init(true)
+	//if err != nil {
+	//	println(err.Error())
+	//}
 
 	err := initDB()
 	if err != nil {
@@ -24,5 +24,5 @@ func main() {
 }
 
 func initDB() error {
-	return dao.Init()
+	return dao.Init(false)
 }

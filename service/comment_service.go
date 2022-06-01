@@ -64,14 +64,18 @@ func (s *CommentService) CommentAction(comment *dao.Comment) error {
 	if err != nil {
 		return err
 	}
+	commentCount, err := s.TotalComment()
+	dao.NewVideoDaoInstance().UpdateCommentByID(comment.VideoId, commentCount)
 	return nil
 }
 
 func (s *CommentService) CommentDelete(id int64) error {
-	err := dao.NewCommentDaoInstance().DeleteCommentById(id)
+	videoId, err := dao.NewCommentDaoInstance().DeleteCommentById(id)
 	if err != nil {
 		return err
 	}
+	commentCount, err := s.TotalComment()
+	dao.NewVideoDaoInstance().UpdateCommentByID(videoId, commentCount)
 	return nil
 }
 
