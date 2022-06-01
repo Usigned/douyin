@@ -1,7 +1,8 @@
 package utils
 
-// 定义常量
+type Empty struct {
+}
 
 const (
-	DEMO_CONST int = 1234
+	DefaultLimit = 5
 )
