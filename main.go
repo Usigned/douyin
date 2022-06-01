@@ -9,7 +9,7 @@ func main() {
 	r := gin.Default()
 
 	initRouter(r)
-	err := dao.Init(false)
+	err := dao.Init(true)
 	if err != nil {
 		println(err.Error())
 	}

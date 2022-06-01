@@ -7,7 +7,7 @@ import (
 )
 
 var db *gorm.DB
-var dsn = "root:123456@tcp(127.0.0.1:3306)/douyin?charset=utf8mb4&parseTime=True&loc=Local"
+var dsn = "root:abc123@tcp(127.0.0.1:3306)/douyins?charset=utf8mb4&parseTime=True&loc=Local"
 
 func Init(migrate bool) error {
 	var err error
@@ -29,7 +29,7 @@ func Init(migrate bool) error {
 }
 
 func Migrate() error {
-	err := db.AutoMigrate(&User{})
+	err := db.AutoMigrate(&User{}, &Comment{}, &Video{})
 	if err != nil {
 		return err
 	}
