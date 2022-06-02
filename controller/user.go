@@ -24,8 +24,6 @@ func UserInfo(c *gin.Context) {
 }
 
 func UserInfoFunc(token, userId string) UserResponse {
-	// TODO
-	// 判断用户是否存在，存在则返回用户信息
 	uid, err := strconv.ParseInt(userId, 10, 64)
 	if err != nil {
 		return ErrorUserResponse(err)

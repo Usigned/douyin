@@ -51,7 +51,7 @@ func (s *UserService) FindTokenByUserName(name string) (*string, error) {
 		return nil, utils.Error{Msg: "user not exist"}
 	}
 	// 查询现有的token
-	status, err := dao.NewLoginStatusDaoInstance().QueryByUserId(user.Id)
+	status, err := dao.NewLoginStatusDaoInstance().QueryTokenByUserId(user.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +135,7 @@ func (s *UserService) Login(username, password string) (*int64, *string, error) 
 	}
 
 	// 查询现有的token
-	status, err := dao.NewLoginStatusDaoInstance().QueryByUserId(user.Id)
+	status, err := dao.NewLoginStatusDaoInstance().QueryTokenByUserId(user.Id)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -49,3 +49,8 @@ func TestVideoService_MFindVideoByAuthorId(t *testing.T) {
 	assert.NotEqual(t, videos, nil)
 	assert.Equal(t, len(videos), 1)
 }
+
+func TestVideoService_Publish(t *testing.T) {
+	err := videoService.Publish("2b6383b5-7078-4800-8678-8e82256a85fc", "test_video_url", "test_cover_url", "Test Video #123")
+	assert.Equal(t, err, nil)
+}

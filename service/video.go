@@ -4,6 +4,7 @@ import (
 	"github.com/Usigned/douyin/dao"
 	"github.com/Usigned/douyin/entity"
 	"github.com/Usigned/douyin/pack"
+	"github.com/Usigned/douyin/utils"
 	"sync"
 	"time"
 )
@@ -112,4 +113,32 @@ func (s *VideoService) FindVideoByAuthorId(authorId int64) ([]*entity.Video, err
 	}
 
 	return videos, nil
+}
+
+func (s VideoService) Publish(token, playUrl, coverUrl, title string) error {
+	if playUrl == "" || coverUrl == "" || title == "" {
+		return utils.Error{Msg: "参数不能为空"}
+	}
+
+	userId, err := dao.NewLoginStatusDaoInstance().QueryUserIdByToken(token)
+	if err != nil {
+		return err
+	}
+	if userId == nil {
+		return utils.Error{Msg: "user not exist"}
+	}
+	videoModel := dao.Video{
+		AuthorId:      *userId,
+		PlayUrl:       playUrl,
+		CoverUrl:      coverUrl,
+		Title:         title,
+		CreateAt:      time.Now(),
+		FavoriteCount: 0,
+		CommentCount:  0,
+	}
+	err = dao.NewVideoDaoInstance().CreateVideo(&videoModel)
+	if err != nil {
+		return err
+	}
+	return nil
 }
