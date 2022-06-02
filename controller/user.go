@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"errors"
+	"fmt"
 	"github.com/Usigned/douyin/dao"
 	"github.com/Usigned/douyin/entity"
 	"github.com/Usigned/douyin/service"
@@ -40,6 +42,15 @@ type UserResponse struct {
 func Register(c *gin.Context) {
 	username := c.Query("username")
 	password := c.Query("password")
+	// 用户输入验证
+	err := InfoVerify(username, password)
+	if err != nil {
+		fmt.Println(err.Error())
+		c.JSON(http.StatusOK, UserLoginResponse{
+			Response: entity.Response{StatusCode: 1, StatusMsg: err.Error()},
+		})
+		return
+	}
 	token := "<" + username + "><" + password + ">"
 	// 先查缓存 ..
 	if _, exist := usersLoginInfo[token]; !exist {
@@ -77,16 +88,11 @@ func Register(c *gin.Context) {
 func Login(c *gin.Context) {
 	username := c.Query("username")
 	password := c.Query("password")
-	// 用户输入验证
-	if Check(username) {
+	err := InfoVerify(username, password)
+	if err != nil {
+		fmt.Println(err.Error())
 		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: entity.Response{StatusCode: 1, StatusMsg: "Please Check Username!\nThe length is controlled within 4-32 characters, and <, >, \\is not allowed"},
-		})
-		return
-	}
-	if Check(password) {
-		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: entity.Response{StatusCode: 1, StatusMsg: "Please Check Password!\nThe length is controlled within 4-32 characters, and <, >, \\is not allowed"},
+			Response: entity.Response{StatusCode: 1, StatusMsg: err.Error()},
 		})
 		return
 	}
@@ -143,13 +149,17 @@ func UserInfo(c *gin.Context) {
 	}
 }
 
+func InfoVerify(username string, password string) error {
+	if Check(username) {
+		return errors.New("Please Check Username!\nThe length is controlled within 4-32 characters, and <, >, \\is not allowed")
+	}
+	if Check(password) {
+		return errors.New("Please Check Password!\nThe length is controlled within 4-32 characters, and <, >, \\is not allowed")
+	}
+	return nil
+}
+
 func Check(str string) bool {
-	//var uPattern = "^[a-zA-Z0-9_-]{4,16}$";
-	//re, err := regexp.Compile(uPattern)
-	//if err != nil{
-	//	return false
-	//}
-	//return re.MatchString(str)
 	lenth := len(str)
 	if lenth < 4 || lenth > 32 {
 		return true
