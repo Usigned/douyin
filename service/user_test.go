@@ -46,3 +46,40 @@ func TestUserService_MFindUserById_Empty(t *testing.T) {
 	assert.NotEqual(t, users, nil)
 	assert.Equal(t, len(users), 0)
 }
+
+func TestUserService_Register(t *testing.T) {
+	err := userService.AddUser("lzq", "cdma1330")
+	assert.Equal(t, err, nil)
+
+	user, err := userService.FindUserByName("lzq")
+	assert.Equal(t, err, nil)
+	assert.NotEqual(t, user, nil)
+}
+
+func TestUserService_Register_Fail(t *testing.T) {
+	err := userService.AddUser("lzq", "cdm1330")
+	assert.NotEqual(t, err, nil)
+}
+
+func TestUserService_Login(t *testing.T) {
+	id, token, err := userService.Login("TestUser #2", "123456")
+	assert.Equal(t, err, nil)
+	assert.NotEqual(t, id, nil)
+	assert.NotEqual(t, token, nil)
+
+	assert.Equal(t, *id, int64(7))
+}
+
+func TestUserService_Login_Fail_1(t *testing.T) {
+	id, token, err := userService.Login("TestUser #2", "123456afdfaf")
+	assert.NotEqual(t, err, nil)
+	assert.Equal(t, id, nil)
+	assert.Equal(t, token, nil)
+}
+
+func TestUserService_Login_Fail_2(t *testing.T) {
+	id, token, err := userService.Login("TestUser #3", "123456")
+	assert.NotEqual(t, err, nil)
+	assert.Equal(t, id, nil)
+	assert.Equal(t, token, nil)
+}

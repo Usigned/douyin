@@ -40,6 +40,6 @@ func (*LoginStatusDao) QueryByUserId(userId int64) (*LoginStatus, error) {
 	return loginStatus, nil
 }
 
-func (LoginStatus) CreateLoginStatus(loginStatus *LoginStatus) error {
+func (*LoginStatusDao) CreateLoginStatus(loginStatus *LoginStatus) error {
 	return db.Create(&loginStatus).Error
 }

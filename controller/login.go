@@ -5,7 +5,6 @@ import (
 	"github.com/Usigned/douyin/service"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"sync/atomic"
 )
 
 // usersLoginInfo use map to store user info, and key is username+password for demo
@@ -37,65 +36,34 @@ type UserLoginResponse struct {
 func Login(c *gin.Context) {
 	username := c.Query("username")
 	password := c.Query("password")
-
-	token := username + password
-
-	if user, exist := usersLoginInfo[token]; exist {
-		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: entity.Response{StatusCode: 0, StatusMsg: "success"},
-			UserId:   user.Id,
-			Token:    token,
-		})
-	} else {
-		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: entity.Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
-		})
-	}
-}
-
-func LoginFunc(username, password string) UserLoginResponse {
-	// TODO
-	return FailUserLoginResponse("wrong password")
+	c.JSON(http.StatusOK, LoginFunc(username, password))
 }
 
 // Register /douyin/user/register/
 func Register(c *gin.Context) {
 	username := c.Query("username")
 	password := c.Query("password")
+	c.JSON(http.StatusOK, RegisterFunc(username, password))
+}
 
-	token := username + password
-
-	if _, exist := usersLoginInfo[token]; exist {
-		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: entity.Response{StatusCode: 1, StatusMsg: "User already exist"},
-		})
-	} else {
-		atomic.AddInt64(&userIdSequence, 1)
-		newUser := entity.User{
-			Id:   userIdSequence,
-			Name: username,
-		}
-		usersLoginInfo[token] = newUser
-		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: entity.Response{StatusCode: 0},
-			UserId:   userIdSequence,
-			Token:    username + password,
-		})
+func LoginFunc(username, password string) UserLoginResponse {
+	userId, token, err := service.NewUserServiceInstance().Login(username, password)
+	if err != nil {
+		return ErrorUserLoginResponse(err)
+	}
+	return UserLoginResponse{
+		Response: entity.Response{
+			StatusCode: 0,
+			StatusMsg:  "success",
+		},
+		UserId: *userId,
+		Token:  *token,
 	}
 }
 
 func RegisterFunc(username, password string) UserLoginResponse {
-	// register
 	userService := service.NewUserServiceInstance()
-	user, err := userService.FindUserByName(username)
-	if err != nil {
-		return ErrorUserLoginResponse(err)
-	}
-	if user != nil {
-		return FailUserLoginResponse("username already exist: " + username)
-	}
-
-	if err = userService.AddUser(username, password); err != nil {
+	if err := userService.Register(username, password); err != nil {
 		return ErrorUserLoginResponse(err)
 	}
 	return LoginFunc(username, password)
@@ -106,15 +74,6 @@ func ErrorUserLoginResponse(err error) UserLoginResponse {
 		Response: entity.Response{
 			StatusCode: 1,
 			StatusMsg:  err.Error(),
-		},
-	}
-}
-
-func FailUserLoginResponse(msg string) UserLoginResponse {
-	return UserLoginResponse{
-		Response: entity.Response{
-			StatusCode: -1,
-			StatusMsg:  msg,
 		},
 	}
 }
