@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync/atomic"
 )
 
@@ -76,13 +77,23 @@ func Register(c *gin.Context) {
 func Login(c *gin.Context) {
 	username := c.Query("username")
 	password := c.Query("password")
-	//fmt.Println("username", username)
-	//fmt.Println("password", password)
-	token := "<" + username + "><" + password + ">"
 	// 用户输入验证
+	if Check(username) {
+		c.JSON(http.StatusOK, UserLoginResponse{
+			Response: entity.Response{StatusCode: 1, StatusMsg: "Please Check Username!\nThe length is controlled within 4-32 characters, and <, >, \\is not allowed"},
+		})
+		return
+	}
+	if Check(password) {
+		c.JSON(http.StatusOK, UserLoginResponse{
+			Response: entity.Response{StatusCode: 1, StatusMsg: "Please Check Password!\nThe length is controlled within 4-32 characters, and <, >, \\is not allowed"},
+		})
+		return
+	}
+	token := "<" + username + "><" + password + ">"
 	// 先查询缓存 ..
 	if _, exist := usersLoginInfo[token]; !exist {
-		user, _ := userService.FindUserByToken(token)
+		user, _ := userService.FindUserByName(username)
 		if user == nil {
 			c.JSON(http.StatusOK, UserLoginResponse{
 				Response: entity.Response{StatusCode: 1, StatusMsg: "User doesn't exist, Please Register"},
@@ -90,6 +101,14 @@ func Login(c *gin.Context) {
 			return
 		}
 		usersLoginInfo[token] = *user
+	}
+	// 密码校验
+	result, _ := userService.FindUserByToken(token)
+	if result == nil {
+		c.JSON(http.StatusOK, UserLoginResponse{
+			Response: entity.Response{StatusCode: 1, StatusMsg: "Password Wrong!"},
+		})
+		return
 	}
 	c.JSON(http.StatusOK, UserLoginResponse{
 		Response: entity.Response{StatusCode: 0},
@@ -122,4 +141,22 @@ func UserInfo(c *gin.Context) {
 			})
 		}
 	}
+}
+
+func Check(str string) bool {
+	//var uPattern = "^[a-zA-Z0-9_-]{4,16}$";
+	//re, err := regexp.Compile(uPattern)
+	//if err != nil{
+	//	return false
+	//}
+	//return re.MatchString(str)
+	lenth := len(str)
+	if lenth < 4 || lenth > 32 {
+		return true
+	}
+	if strings.Contains(str, "<") || strings.Contains(str, ">") ||
+		strings.Contains(str, "/") || strings.Contains(str, "\\") {
+		return true
+	}
+	return false
 }
