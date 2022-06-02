@@ -5,6 +5,7 @@ package dao
 import (
 	"gorm.io/gorm"
 	"log"
+	"regexp"
 	"sync"
 )
 
@@ -74,6 +75,26 @@ func (*UserDao) QueryUserByName(name string) (*User, error) {
 		return nil, err
 	}
 	return user, nil
+}
+
+func (*UserDao) QueryUserByToken(token string) (*User, error) {
+	var users *User //实例化对象
+	re, err := regexp.Compile("[A-Za-z0-9_\\-\u4e00-\u9fa5]+")
+	if err != nil {
+		return nil, err
+	}
+	name := re.FindAllString(token, 2)[0]
+	password := re.FindAllString(token, 2)[1]
+	err = db.Where("name = ? and password = ?", name, password).First(&users).Error
+	if err == gorm.ErrRecordNotFound {
+		return nil, err
+	}
+	if err != nil {
+		//fmt.Println("record not found!")
+		return nil, err
+	}
+
+	return users, nil
 }
 
 func (*UserDao) Save(user *User) error {

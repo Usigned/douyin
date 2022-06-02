@@ -51,8 +51,11 @@ func (s *UserService) FindTokenByUserId(id int64) (*string, error) {
 }
 
 func (s UserService) FindUserByToken(token string) (*entity.User, error) {
-	// TODO
-	return nil, nil
+	user, err := dao.NewUserDaoInstance().QueryUserByToken(token)
+	if err != nil {
+		return nil, err
+	}
+	return pack.User(user), err
 }
 
 func (s *UserService) FindUserByName(name string) (*entity.User, error) {
@@ -66,14 +69,12 @@ func (s *UserService) FindUserByName(name string) (*entity.User, error) {
 	return pack.User(userModel), nil
 }
 
-func (s *UserService) SaveUser(user *dao.User) error {
+func (s *UserService) SaveUser(user *dao.User) (*entity.User, error) {
 	err := dao.NewUserDaoInstance().Save(user)
 	if err != nil {
-		//log.Fatal("User Dup!", err)
-		//fmt.Println("user duplicated!!!", err)
-		return err
+		return nil, err
 	}
-	return nil
+	return pack.User(user), nil
 }
 
 func (s *UserService) TotalUser() (int64, error) {

@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"github.com/Usigned/douyin/dao"
 	"github.com/Usigned/douyin/entity"
 	"github.com/Usigned/douyin/service"
@@ -23,7 +22,7 @@ var usersLoginInfo = map[string]entity.User{
 		IsFollow:      true,
 	},
 }
-var curUser dao.User
+
 var userService = service.NewUserServiceInstance()
 
 type UserLoginResponse struct {
@@ -40,66 +39,63 @@ type UserResponse struct {
 func Register(c *gin.Context) {
 	username := c.Query("username")
 	password := c.Query("password")
-	token := username + password
+	token := "<" + username + "><" + password + ">"
 	// 先查缓存 ..
-	if _, exist := usersLoginInfo[token]; exist {
-		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: entity.Response{StatusCode: 1, StatusMsg: "User already exist, don't register again!"},
-		})
-	} else {
-		userIdSequence, _ := userService.LastId()
-		fmt.Println("id is:", userIdSequence)
-		atomic.AddInt64(&userIdSequence, 1)
-		newUser := entity.User{
-			Id:   userIdSequence,
-			Name: username,
-		}
-		curUser.Id = newUser.Id
-		curUser.Name = username
-		curUser.Password = password
-		err := userService.SaveUser(&curUser)
-		if err != nil {
+	if _, exist := usersLoginInfo[token]; !exist {
+		if user, _ := userService.FindUserByName(username); user == nil {
+			// 用户注册
+			userIdSequence, _ := userService.LastId()
+			atomic.AddInt64(&userIdSequence, 1)
+			newUser := &dao.User{
+				Id:       userIdSequence,
+				Name:     username,
+				Password: password,
+			}
+			var err error
+			user, err = userService.SaveUser(newUser)
+			if err != nil {
+				c.JSON(http.StatusOK, UserLoginResponse{
+					Response: entity.Response{StatusCode: 1, StatusMsg: "User register failed, Please retry for a minute!"},
+				})
+				return
+			}
+			usersLoginInfo[token] = *user
 			c.JSON(http.StatusOK, UserLoginResponse{
-				Response: entity.Response{StatusCode: 1, StatusMsg: "User already exist, don't register again!"},
+				Response: entity.Response{StatusCode: 0},
+				UserId:   userIdSequence,
+				Token:    token,
 			})
+			return
 		}
-		usersLoginInfo[token] = newUser
-		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: entity.Response{StatusCode: 0},
-			UserId:   userIdSequence,
-			Token:    username + password,
-		})
 	}
+	c.JSON(http.StatusOK, UserLoginResponse{
+		Response: entity.Response{StatusCode: 1, StatusMsg: "User already exist, don't register again!"},
+	})
 }
 
 func Login(c *gin.Context) {
 	username := c.Query("username")
 	password := c.Query("password")
-
-	token := username + password
+	//fmt.Println("username", username)
+	//fmt.Println("password", password)
+	token := "<" + username + "><" + password + ">"
+	// 用户输入验证
 	// 先查询缓存 ..
-	if user, exist := usersLoginInfo[token]; exist {
-		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: entity.Response{StatusCode: 0},
-			UserId:   user.Id,
-			Token:    token,
-		})
-	} else {
-		result, err := userService.FindUserByName(username)
-		if err != nil {
+	if _, exist := usersLoginInfo[token]; !exist {
+		user, _ := userService.FindUserByToken(token)
+		if user == nil {
 			c.JSON(http.StatusOK, UserLoginResponse{
 				Response: entity.Response{StatusCode: 1, StatusMsg: "User doesn't exist, Please Register"},
 			})
-		} else {
-			usersLoginInfo[token] = *result
-			c.JSON(http.StatusOK, UserLoginResponse{
-				Response: entity.Response{StatusCode: 0},
-				UserId:   result.Id,
-				Token:    token,
-			})
+			return
 		}
+		usersLoginInfo[token] = *user
 	}
-
+	c.JSON(http.StatusOK, UserLoginResponse{
+		Response: entity.Response{StatusCode: 0},
+		UserId:   usersLoginInfo[token].Id,
+		Token:    token,
+	})
 }
 
 func UserInfo(c *gin.Context) {

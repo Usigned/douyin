@@ -2,7 +2,7 @@ package Impl
 
 import "github.com/Usigned/douyin/entity"
 
-// UserRepository ..
+// UserRepository 暂时没用到
 type UserRepository interface {
 	Save(user *entity.User) error
 	TotalNum() (int64, error)
