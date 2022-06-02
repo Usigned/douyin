@@ -26,6 +26,7 @@ func (e InvalidParameterError) Error() string {
 
 // Publish check token then save upload file to public directory
 func Publish(c *gin.Context) {
+	// TODO
 	token := c.PostForm("token")
 
 	if _, exist := usersLoginInfo[token]; !exist {
@@ -66,8 +67,7 @@ func PublishList(c *gin.Context) {
 }
 
 func publishListFunc(token, userId string) VideoListResponse {
-	// TODO
-	// 使用token进行鉴权
+	// TODO 使用token进行鉴权
 	if token == "" || userId == "" {
 		return ErrorVideoListResponse(InvalidParameterError{msg: "empty token or user_id"})
 	}
@@ -75,7 +75,8 @@ func publishListFunc(token, userId string) VideoListResponse {
 	if err != nil {
 		return ErrorVideoListResponse(err)
 	}
-	videos, err := service.NewVideoServiceInstance().FindVideoByAuthorId(uid)
+
+	videos, err := service.NewVideoServiceInstance().PublishList(uid)
 	if err != nil {
 		return ErrorVideoListResponse(err)
 	}
