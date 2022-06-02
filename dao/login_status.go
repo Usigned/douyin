@@ -27,7 +27,7 @@ func NewLoginStatusDaoInstance() *LoginStatusDao {
 	return loginStatusDao
 }
 
-func (*LoginStatusDao) QueryByUserId(userId int64) (*LoginStatus, error) {
+func (*LoginStatusDao) QueryTokenByUserId(userId int64) (*LoginStatus, error) {
 	var loginStatus *LoginStatus
 	err := db.Where("user_id = ?", userId).First(&loginStatus).Error
 	if err == gorm.ErrRecordNotFound {
@@ -40,6 +40,19 @@ func (*LoginStatusDao) QueryByUserId(userId int64) (*LoginStatus, error) {
 	return loginStatus, nil
 }
 
-func (LoginStatus) CreateLoginStatus(loginStatus *LoginStatus) error {
+func (*LoginStatusDao) CreateLoginStatus(loginStatus *LoginStatus) error {
 	return db.Create(&loginStatus).Error
+}
+
+func (*LoginStatusDao) QueryUserIdByToken(token string) (*int64, error) {
+	var loginStatus *LoginStatus
+	err := db.Where("token = ?", token).First(&loginStatus).Error
+	if err == gorm.ErrRecordNotFound {
+		return nil, nil
+	}
+	if err != nil {
+		log.Fatal("find loginStatus by token err:" + err.Error())
+		return nil, err
+	}
+	return &loginStatus.UserId, nil
 }
