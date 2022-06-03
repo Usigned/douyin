@@ -23,25 +23,7 @@ func Publish(c *gin.Context) {
 		})
 		return
 	}
-
 	c.JSON(http.StatusOK, PublishFunc(token, title, data, c))
-
-	filename := filepath.Base(data.Filename)
-	user := usersLoginInfo[token]
-	finalName := fmt.Sprintf("%d_%s", user.Id, filename)
-	saveFile := filepath.Join("./public/", finalName)
-	if err := c.SaveUploadedFile(data, saveFile); err != nil {
-		c.JSON(http.StatusOK, entity.Response{
-			StatusCode: 1,
-			StatusMsg:  err.Error(),
-		})
-		return
-	}
-
-	c.JSON(http.StatusOK, entity.Response{
-		StatusCode: 0,
-		StatusMsg:  finalName + " uploaded successfully",
-	})
 }
 
 // PublishFunc TODO
@@ -56,7 +38,8 @@ func PublishFunc(token, title string, data *multipart.FileHeader, c *gin.Context
 		return ErrorResponse(utils.Error{Msg: "unsupported file extension"})
 	}
 	//存文件
-	filename := fmt.Sprintf("%s.%s", utils.GenerateUUID(), ext)
+	filepath.Base(data.Filename)
+	filename := fmt.Sprintf("%s%s", utils.GenerateUUID(), ext)
 	saveFile := filepath.Join("./public/", filename)
 	if err := c.SaveUploadedFile(data, saveFile); err != nil {
 		return ErrorResponse(err)

@@ -51,6 +51,12 @@ func TestVideoService_MFindVideoByAuthorId(t *testing.T) {
 }
 
 func TestVideoService_Publish(t *testing.T) {
-	err := videoService.Publish("2b6383b5-7078-4800-8678-8e82256a85fc", "test_video_url", "test_cover_url", "Test Video #123")
+	user, err := dao.NewUserDaoInstance().QueryUserById(12)
+	videoCount := user.VideoCount
+	err = videoService.Publish("2b6383b5-7078-4800-8678-8e82256a85fc", "test_video_url", "test_cover_url", "Test Video #123")
 	assert.Equal(t, err, nil)
+	user, err = dao.NewUserDaoInstance().QueryUserById(12)
+	assert.Equal(t, err, nil)
+	assert.NotEqual(t, user, nil)
+	assert.Equal(t, user.VideoCount, videoCount+1)
 }

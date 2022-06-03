@@ -59,3 +59,13 @@ func TestUserDao_QueryUserByName(t *testing.T) {
 	assert.NotEqual(t, user, nil)
 	assert.Equal(t, user.Id, int64(1))
 }
+
+func TestUserDao_IncreaseVideoCountByOne_NoSuchUser(t *testing.T) {
+	err := userDao.IncreaseVideoCountByOne(-1)
+	assert.NotEqual(t, err, nil)
+}
+
+func TestUserDao_IncreaseVideoCountByOne(t *testing.T) {
+	err := userDao.IncreaseVideoCountByOne(1)
+	assert.Equal(t, err, nil)
+}
