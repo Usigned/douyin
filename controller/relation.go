@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"github.com/Usigned/douyin/entity"
+	"douyin/entity"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )

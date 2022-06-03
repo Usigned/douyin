@@ -4,8 +4,8 @@ package pack
 // TODO
 
 import (
-	"github.com/Usigned/douyin/dao"
-	"github.com/Usigned/douyin/entity"
+	"douyin/dao"
+	"douyin/entity"
 )
 
 func Comment(commentModel *dao.Comment) *entity.Comment {
@@ -20,7 +20,6 @@ func Comment(commentModel *dao.Comment) *entity.Comment {
 			CreateDate: commentModel.CreateAt,
 		}
 	}
-
 	return nil
 }
 

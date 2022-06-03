@@ -2,9 +2,9 @@ package service
 
 // TODO
 import (
-	"github.com/Usigned/douyin/dao"
-	"github.com/Usigned/douyin/entity"
-	"github.com/Usigned/douyin/pack"
+	"douyin/dao"
+	"douyin/entity"
+	"douyin/pack"
 	"sync"
 )
 

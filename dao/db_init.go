@@ -29,7 +29,7 @@ func Init(migrate bool) error {
 }
 
 func Migrate() error {
-	err := db.AutoMigrate(&User{}, &Comment{}, &Video{}, &Favorite{})
+	err := db.AutoMigrate(&User{}, &Comment{}, &Video{}, &Favorite{}, &LoginStatus{})
 	if err != nil {
 		return err
 	}

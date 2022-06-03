@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/Usigned/douyin/dao"
+	dao "douyin/dao"
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,5 +24,5 @@ func main() {
 }
 
 func initDB() error {
-	return dao.Init(false)
+	return dao.Init(true)
 }

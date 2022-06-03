@@ -1,8 +1,8 @@
 package pack
 
 import (
-	"github.com/Usigned/douyin/dao"
-	"github.com/Usigned/douyin/entity"
+	"douyin/dao"
+	"douyin/entity"
 )
 
 // User if param is nil then return nil

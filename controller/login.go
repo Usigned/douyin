@@ -1,31 +1,10 @@
 package controller
 
 import (
-	"github.com/Usigned/douyin/entity"
-	"github.com/Usigned/douyin/service"
+	"douyin/entity"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
-
-// usersLoginInfo use map to store user info, and key is username+password for demo
-// user data will be cleared every time the server starts
-// test data: username=zhanglei, password=douyin
-var usersLoginInfo = map[string]entity.User{
-	"zhangleidouyin": {
-		Id:            1,
-		Name:          "zhanglei",
-		FollowCount:   10,
-		FollowerCount: 5,
-		IsFollow:      true,
-	},
-	"qingcdma1330": {
-		Id:            1,
-		Name:          "Qing",
-		FollowCount:   100,
-		FollowerCount: 5000,
-		IsFollow:      false,
-	},
-}
 
 type UserLoginResponse struct {
 	entity.Response
@@ -47,7 +26,7 @@ func Register(c *gin.Context) {
 }
 
 func LoginFunc(username, password string) UserLoginResponse {
-	userId, token, err := service.NewUserServiceInstance().Login(username, password)
+	userId, token, err := userService.Login(username, password)
 	if err != nil {
 		return ErrorUserLoginResponse(err)
 	}
@@ -62,7 +41,6 @@ func LoginFunc(username, password string) UserLoginResponse {
 }
 
 func RegisterFunc(username, password string) UserLoginResponse {
-	userService := service.NewUserServiceInstance()
 	if err := userService.Register(username, password); err != nil {
 		return ErrorUserLoginResponse(err)
 	}

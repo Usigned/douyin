@@ -1,18 +1,43 @@
 package service
 
+// TODO
 import (
-	"github.com/Usigned/douyin/dao"
-	"github.com/Usigned/douyin/entity"
-	"github.com/Usigned/douyin/pack"
-	"github.com/Usigned/douyin/utils"
+	"douyin/dao"
+	"douyin/entity"
+	"douyin/pack"
+	"douyin/utils"
+	"errors"
+	"strings"
 	"sync"
+	"sync/atomic"
 )
 
 type UserService struct {
 }
 
+var usersLoginInfo = map[string]entity.User{
+	"zhangleidouyin": {
+		Id:            1,
+		Name:          "zhanglei",
+		FollowCount:   10,
+		FollowerCount: 5,
+		IsFollow:      true,
+	},
+	"qingcdma1330": {
+		Id:            1,
+		Name:          "Qing",
+		FollowCount:   100,
+		FollowerCount: 5000,
+		IsFollow:      false,
+	},
+}
+
 var userService *UserService
 var userOnce sync.Once
+
+func CopyULI() map[string]entity.User {
+	return usersLoginInfo
+}
 
 func NewUserServiceInstance() *UserService {
 	userOnce.Do(
@@ -24,10 +49,12 @@ func NewUserServiceInstance() *UserService {
 
 // FindUserById return nil if no user is found
 func (s *UserService) FindUserById(id int64) (*entity.User, error) {
+	// 查询用户信息
 	userModel, err := dao.NewUserDaoInstance().QueryUserById(id)
 	if err != nil {
 		return nil, err
 	}
+	// 包装用户信息
 	return pack.User(userModel), nil
 }
 
@@ -80,34 +107,26 @@ func (s *UserService) FindUserByName(name string) (*entity.User, error) {
 
 // AddUser 创建用户和token
 func (s *UserService) AddUser(username, password string) error {
-	if username == "" {
-		return utils.Error{Msg: "Invalid username"}
-	}
-
-	// 创建用户
-	user, err := dao.NewUserDaoInstance().QueryUserByName(username)
-	if err != nil {
-		return err
-	}
-	if user != nil {
-		return utils.Error{Msg: "username already been used"}
-	}
-
+	// 用户注册
 	password = utils.Md5(password)
-	user = &dao.User{
+	userIdSequence, _ := dao.NewUserDaoInstance().MaxId()
+	atomic.AddInt64(&userIdSequence, 1)
+	newUser := &dao.User{
+		Id:       userIdSequence,
 		Name:     username,
 		Password: password,
 	}
-	err = dao.NewUserDaoInstance().CreateUser(user)
+	err := dao.NewUserDaoInstance().CreateUser(newUser)
 	if err != nil {
 		return err
 	}
 
 	// 创建token
 	loginStatus := &dao.LoginStatus{
-		UserId: user.Id,
+		UserId: newUser.Id,
 		Token:  utils.GenerateUUID(),
 	}
+	usersLoginInfo[loginStatus.Token] = *pack.User(newUser)
 	err = dao.NewLoginStatusDaoInstance().CreateLoginStatus(loginStatus)
 	if err != nil {
 		return err
@@ -116,40 +135,68 @@ func (s *UserService) AddUser(username, password string) error {
 }
 
 func (s *UserService) Register(username, password string) error {
-	return s.AddUser(username, password)
+	// 用户输入验证
+	err := InfoVerify(username, password)
+	if err != nil {
+		return err
+	}
+	token := "<" + username + "><" + password + ">"
+	// 先查缓存 ..
+	if _, exist := usersLoginInfo[token]; !exist {
+		if user, _ := userService.FindUserByName(username); user == nil {
+			err = s.AddUser(username, password)
+			if err != nil {
+				return utils.Error{Msg: "User register failed, Please retry for a minute!"}
+			}
+			return err
+		}
+	}
+	return utils.Error{Msg: "User already exist, don't register again!"}
 }
 
 func (s *UserService) Login(username, password string) (*int64, *string, error) {
-	// 查询用户是否存在
-	user, err := dao.NewUserDaoInstance().QueryUserByName(username)
-	if err != nil {
-		return nil, nil, err
-	}
-	if user == nil {
-		return nil, nil, utils.Error{Msg: "user not exist"}
-	}
-
-	// 校验密码
-	if utils.Md5(password) != user.Password {
-		return nil, nil, utils.Error{Msg: "wrong password"}
-	}
-
-	// 查询现有的token
-	status, err := dao.NewLoginStatusDaoInstance().QueryTokenByUserId(user.Id)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	// token不存在
-	if status == nil {
-		status := &dao.LoginStatus{
-			UserId: user.Id,
-			Token:  utils.GenerateUUID(),
+	//// 校验用户名及密码是否合法
+	//err := InfoVerify(username, password)
+	//if err != nil {
+	//	return nil, nil, err
+	//}
+	// 用户校验
+	password = utils.Md5(password)
+	token := "<" + username + "><" + password + ">"
+	// 先查询缓存 ..
+	user, _ := dao.NewUserDaoInstance().QueryUserByName(username)
+	if _, exist := usersLoginInfo[token]; !exist {
+		if user == nil {
+			return nil, nil, utils.Error{Msg: "User doesn't exist, Please Register! "}
 		}
-		err := dao.NewLoginStatusDaoInstance().CreateLoginStatus(status)
-		if err != nil {
-			return nil, nil, err
-		}
+		usersLoginInfo[token] = *pack.User(user)
 	}
-	return &user.Id, &status.Token, nil
+	// 密码校验
+	result, _ := dao.NewUserDaoInstance().QueryUserByToken(token)
+	if result == nil {
+		return nil, nil, utils.Error{Msg: "Password Wrong!"}
+	}
+	return &user.Id, &token, nil
+}
+
+func InfoVerify(username string, password string) error {
+	if Check(username) {
+		return errors.New("Please Check Username!\nThe length is controlled within 4-32 characters, and <, >, \\is not allowed")
+	}
+	if Check(password) {
+		return errors.New("Please Check Password!\nThe length is controlled within 4-32 characters, and <, >, \\is not allowed")
+	}
+	return nil
+}
+
+func Check(str string) bool {
+	length := len(str)
+	if length < 4 || length > 32 {
+		return true
+	}
+	if strings.Contains(str, "<") || strings.Contains(str, ">") ||
+		strings.Contains(str, "/") || strings.Contains(str, "\\") {
+		return true
+	}
+	return false
 }

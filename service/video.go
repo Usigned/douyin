@@ -1,10 +1,10 @@
 package service
 
 import (
-	"github.com/Usigned/douyin/dao"
-	"github.com/Usigned/douyin/entity"
-	"github.com/Usigned/douyin/pack"
-	"github.com/Usigned/douyin/utils"
+	"douyin/dao"
+	"douyin/entity"
+	"douyin/pack"
+	"douyin/utils"
 	"sync"
 	"time"
 )

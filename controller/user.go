@@ -1,137 +1,21 @@
 package controller
 
 import (
-	"github.com/Usigned/douyin/entity"
+	"douyin/entity"
+	"douyin/service"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"sync/atomic"
+	"strconv"
 )
 
-type UserNotExistError struct {
-	msg string
-}
-
-func (e UserNotExistError) Error() string {
-	return "user not exist, " + e.msg
-}
-
-// usersLoginInfo use map to store user info, and key is username+password for demo
-// user data will be cleared every time the server starts
-// test data: username=zhanglei, password=douyin
-var usersLoginInfo = map[string]entity.User{
-	"zhangleidouyin": {
-		Id:            1,
-		Name:          "zhanglei",
-		FollowCount:   10,
-		FollowerCount: 5,
-		IsFollow:      true,
-	},
-	"qingcdma1330": {
-		Id:            1,
-		Name:          "Qing",
-		FollowCount:   100,
-		FollowerCount: 5000,
-		IsFollow:      false,
-	},
-}
-
 var userService = service.NewUserServiceInstance()
-
-type UserLoginResponse struct {
-	entity.Response
-	UserId int64  `json:"user_id,omitempty"`
-	Token  string `json:"token"`
-}
 
 type UserResponse struct {
 	entity.Response
 	User entity.User `json:"user"`
 }
 
-func Register(c *gin.Context) {
-	username := c.Query("username")
-	password := c.Query("password")
-	// 用户输入验证
-	err := InfoVerify(username, password)
-	if err != nil {
-		fmt.Println(err.Error())
-		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: entity.Response{StatusCode: 1, StatusMsg: err.Error()},
-		})
-		return
-	}
-	token := "<" + username + "><" + password + ">"
-	// 先查缓存 ..
-	if _, exist := usersLoginInfo[token]; !exist {
-		if user, _ := userService.FindUserByName(username); user == nil {
-			// 用户注册
-			userIdSequence, _ := userService.LastId()
-			atomic.AddInt64(&userIdSequence, 1)
-			newUser := &dao.User{
-				Id:       userIdSequence,
-				Name:     username,
-				Password: password,
-			}
-			var err error
-			user, err = userService.SaveUser(newUser)
-			if err != nil {
-				c.JSON(http.StatusOK, UserLoginResponse{
-					Response: entity.Response{StatusCode: 1, StatusMsg: "User register failed, Please retry for a minute!"},
-				})
-				return
-			}
-			usersLoginInfo[token] = *user
-			c.JSON(http.StatusOK, UserLoginResponse{
-				Response: entity.Response{StatusCode: 0},
-				UserId:   userIdSequence,
-				Token:    token,
-			})
-			return
-		}
-	}
-	c.JSON(http.StatusOK, UserLoginResponse{
-		Response: entity.Response{StatusCode: 1, StatusMsg: "User already exist, don't register again!"},
-	})
-}
-
-func Login(c *gin.Context) {
-	username := c.Query("username")
-	password := c.Query("password")
-	err := InfoVerify(username, password)
-	if err != nil {
-		fmt.Println(err.Error())
-		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: entity.Response{StatusCode: 1, StatusMsg: err.Error()},
-		})
-		return
-	}
-	token := "<" + username + "><" + password + ">"
-	// 先查询缓存 ..
-	if _, exist := usersLoginInfo[token]; !exist {
-		user, _ := userService.FindUserByName(username)
-		if user == nil {
-			c.JSON(http.StatusOK, UserLoginResponse{
-				Response: entity.Response{StatusCode: 1, StatusMsg: "User doesn't exist, Please Register"},
-			})
-			return
-		}
-		usersLoginInfo[token] = *user
-	}
-	// 密码校验
-	result, _ := userService.FindUserByToken(token)
-	if result == nil {
-		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: entity.Response{StatusCode: 1, StatusMsg: "Password Wrong!"},
-		})
-		return
-	}
-	c.JSON(http.StatusOK, UserLoginResponse{
-		Response: entity.Response{StatusCode: 0},
-		UserId:   usersLoginInfo[token].Id,
-		Token:    token,
-	})
-}
-
+// UserInfo /douyin/user
 func UserInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, UserInfoFunc(
 		c.Query("token"),
@@ -159,14 +43,6 @@ func UserInfoFunc(token, userId string) UserResponse {
 		},
 		User: *user,
 	}
-func InfoVerify(username string, password string) error {
-	if Check(username) {
-		return errors.New("Please Check Username!\nThe length is controlled within 4-32 characters, and <, >, \\is not allowed")
-	}
-	if Check(password) {
-		return errors.New("Please Check Password!\nThe length is controlled within 4-32 characters, and <, >, \\is not allowed")
-	}
-	return nil
 }
 
 func ErrorUserResponse(err error) UserResponse {
@@ -180,22 +56,9 @@ func ErrorUserResponse(err error) UserResponse {
 
 func FailUserResponse(msg string) UserResponse {
 	return UserResponse{
-	Response: entity.Response{
-	StatusCode: -1,
-	StatusMsg:  msg,
-},
-}
-}
-
-
-func Check(str string) bool {
-	lenth := len(str)
-	if lenth < 4 || lenth > 32 {
-	return true
-}
-	if strings.Contains(str, "<") || strings.Contains(str, ">") ||
-	strings.Contains(str, "/") || strings.Contains(str, "\\") {
-	return true
-}
-	return false
+		Response: entity.Response{
+			StatusCode: -1,
+			StatusMsg:  msg,
+		},
+	}
 }

@@ -34,6 +34,10 @@ func NewUserDaoInstance() *UserDao {
 	return userDao
 }
 
+func (*UserDao) CreateUser(user *User) error {
+	return db.Create(&user).Error
+}
+
 func (*UserDao) QueryUserById(id int64) (*User, error) {
 	user := new(User) //实例化对象
 	result := db.Where("id = ?", id).First(&user)
@@ -64,14 +68,12 @@ func (*UserDao) MQueryUserById(ids []int64) (map[int64]User, error) {
 }
 
 func (*UserDao) QueryUserByName(name string) (*User, error) {
-	var user *User //实例化对象
-	result := db.Where("name = ?", name).First(&user)
-	err := result.Error
+	var user *User
+	err := db.Where("name = ?", name).First(&user).Error
 	if err == gorm.ErrRecordNotFound {
-		return nil, err
+		return nil, nil
 	}
 	if err != nil {
-		//fmt.Println("record not found!")
 		return nil, err
 	}
 	return user, nil
@@ -128,17 +130,4 @@ func (*UserDao) MaxId() (int64, error) {
 		return 0, err
 	}
 	return lastRec.Id, nil
-}
-
-func (*UserDao) QueryUserByName(name string) (*User, error) {
-	var user *User
-	err := db.Where("name = ?", name).First(&user).Error
-	if err == gorm.ErrRecordNotFound {
-		return nil, nil
-	}
-	if err != nil {
-		log.Fatal("find user by name err:" + err.Error())
-		return nil, err
-	}
-	return user, nil
 }
