@@ -22,7 +22,7 @@ var favoriteOnce sync.Once
 
 // NewFavoriteDaoInstance Singleton
 func NewFavoriteDaoInstance() *FavoriteDao {
-	userOnce.Do(
+	favoriteOnce.Do(
 		func() {
 			favoriteDao = &FavoriteDao{}
 		})

@@ -23,7 +23,7 @@ var commentOnce sync.Once
 
 // NewCommentDaoInstance Singleton
 func NewCommentDaoInstance() *CommentDao {
-	userOnce.Do(
+	commentOnce.Do(
 		func() {
 			commentDao = &CommentDao{}
 		})
