@@ -14,6 +14,7 @@ import (
 // Publish check token then save upload file to public directory TODO
 func Publish(c *gin.Context) {
 	token := c.PostForm("token")
+	title := c.PostForm("title")
 	data, err := c.FormFile("data")
 	if err != nil {
 		c.JSON(http.StatusOK, entity.Response{
@@ -23,7 +24,7 @@ func Publish(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, PublishFunc(token, data, c))
+	c.JSON(http.StatusOK, PublishFunc(token, title, data, c))
 
 	filename := filepath.Base(data.Filename)
 	user := usersLoginInfo[token]
@@ -43,17 +44,37 @@ func Publish(c *gin.Context) {
 	})
 }
 
-func PublishFunc(token string, data *multipart.FileHeader, c *gin.Context) entity.Response {
-	// TODO
-	// 1. check token
-	// 2. store video file
-	// 3. add video
+// PublishFunc TODO
+func PublishFunc(token, title string, data *multipart.FileHeader, c *gin.Context) entity.Response {
+	//检查文件是否为空
+	if data == nil {
+		return ErrorResponse(utils.Error{Msg: "empty data file"})
+	}
+	//检查后缀名
+	ext := filepath.Ext(data.Filename)
+	if ext != ".mp4" {
+		return ErrorResponse(utils.Error{Msg: "unsupported file extension"})
+	}
+	//存文件
+	filename := fmt.Sprintf("%s.%s", utils.GenerateUUID(), ext)
+	saveFile := filepath.Join("./public/", filename)
+	if err := c.SaveUploadedFile(data, saveFile); err != nil {
+		return ErrorResponse(err)
+	}
+	//生成视频信息
+	// TODO 目前是数据库硬编码域名，后续可改成动态
+	// http://127.0.0.1/douyin/video/filename
+	playUrl := filepath.Join(utils.VideoUrlPrefix, filename)
+	coverUrl := utils.DefaultCoverUrl
 
-	err := service.NewVideoServiceInstance().Publish(token, "afdafa", "13131", "title")
+	err := service.NewVideoServiceInstance().Publish(token, playUrl, coverUrl, title)
 	if err != nil {
 		return ErrorResponse(err)
 	}
-	return ErrorResponse(utils.Error{Msg: "upload fail"})
+	return entity.Response{
+		StatusCode: 0,
+		StatusMsg:  "success",
+	}
 }
 
 func ErrorResponse(err error) entity.Response {
