@@ -126,7 +126,7 @@ func (s VideoService) Publish(token, playUrl, coverUrl, title string) error {
 	if playUrl == "" || coverUrl == "" || title == "" {
 		return utils.Error{Msg: "参数不能为空"}
 	}
-
+	// 查询用户
 	userId, err := dao.NewLoginStatusDaoInstance().QueryUserIdByToken(token)
 	if err != nil {
 		return err
@@ -134,6 +134,8 @@ func (s VideoService) Publish(token, playUrl, coverUrl, title string) error {
 	if userId == nil {
 		return utils.Error{Msg: "user not exist"}
 	}
+
+	// 保存 video
 	videoModel := dao.Video{
 		AuthorId:      *userId,
 		PlayUrl:       playUrl,
@@ -144,6 +146,11 @@ func (s VideoService) Publish(token, playUrl, coverUrl, title string) error {
 		CommentCount:  0,
 	}
 	err = dao.NewVideoDaoInstance().CreateVideo(&videoModel)
+	if err != nil {
+		return err
+	}
+	// 用户的视频数增加
+	err = dao.NewUserDaoInstance().IncreaseVideoCountByOne(*userId)
 	if err != nil {
 		return err
 	}
