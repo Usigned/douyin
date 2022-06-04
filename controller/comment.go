@@ -1,24 +1,14 @@
 package controller
 
 import (
-	"douyin/dao"
 	"douyin/entity"
-	"douyin/pack"
 	"douyin/service"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
-	"sync/atomic"
-	"time"
 )
 
 var commentService = service.NewCommentServiceInstance()
-
-type CommentListResponse struct {
-	entity.Response
-	CommentList []entity.Comment `json:"comment_list,omitempty"`
-}
 
 type CommentActionResponse struct {
 	entity.Response
@@ -27,65 +17,78 @@ type CommentActionResponse struct {
 
 // CommentAction no practical effect, just check if token is valid
 func CommentAction(c *gin.Context) {
-	token := c.Query("token")
-	actionType := c.Query("action_type")
-	// 先查缓存
-	if user, exist := usersLoginInfo[token]; exist {
-		if actionType == "1" {
-			videoId, _ := strconv.ParseInt(c.Query("video_id"), 10, 64)
-			text := c.Query("comment_text")
-			date := time.Now().Format("01-02")
-			commentIdSequence, _ := commentService.LastId()
-			fmt.Println("id is:", commentIdSequence)
-			atomic.AddInt64(&commentIdSequence, 1)
-			var curComment = dao.Comment{
-				Id:       commentIdSequence,
-				VideoId:  videoId,
-				UserName: user.Name,
-				Content:  text,
-				CreateAt: time.Now().Format("01-02"),
-			}
-			commentService.CommentAction(&curComment)
-			c.JSON(http.StatusOK, CommentActionResponse{Response: entity.Response{StatusCode: 0},
-				Comment: entity.Comment{
-					Id:         commentIdSequence,
-					User:       user,
-					Content:    text,
-					CreateDate: date,
-				}})
-			return
-		} else if actionType == "2" {
-			// 删除评论
-			id, _ := strconv.ParseInt(c.Query("comment_id"), 10, 64)
-			date := time.Now().Format("01-02")
-			testComment := entity.Comment{
-				Id:         id,
-				User:       user,
-				CreateDate: date,
-			}
-			fmt.Println("删除测试", testComment)
-			commentService.CommentDelete(id)
-			c.JSON(http.StatusOK, CommentActionResponse{Response: entity.Response{StatusCode: 0},
-				Comment: testComment})
-			return
+	c.JSON(http.StatusOK, CommentActionFunc(
+		c.Query("video_id"),
+		c.Query("token"),
+		c.Query("action_type"),
+		c.Query("comment_id"),
+		c.Query("comment_text"),
+	))
+}
+
+func CommentActionFunc(videoId, token, actionType, commentId, text string) CommentActionResponse {
+	vid, err := strconv.ParseInt(videoId, 10, 64)
+	if err != nil {
+		return ErrorCommentResponse(err)
+	}
+	if actionType == "1" {
+		comment, err := commentService.Add(vid, token, text)
+		if err != nil {
+			return ErrorCommentResponse(err)
 		}
-		c.JSON(http.StatusOK, entity.Response{StatusCode: 0})
+		if comment == nil {
+			return FailCommentResponse("Comments are not allowed to be empty! ")
+		}
+		return CommentActionResponse{
+			Response: entity.Response{
+				StatusCode: 0,
+				StatusMsg:  "Add comment success! ",
+			},
+			Comment: *comment,
+		}
+	} else if actionType == "2" {
+		cid, err := strconv.ParseInt(commentId, 10, 64)
+		if err != nil {
+			return ErrorCommentResponse(err)
+		}
+		comment, err := commentService.Withdraw(cid)
+		if err != nil {
+			return ErrorCommentResponse(err)
+		}
+		if comment == nil {
+			return FailCommentResponse("Withdraw failed, Please try again later! ")
+		}
+		return CommentActionResponse{
+			Response: entity.Response{
+				StatusCode: 0,
+				StatusMsg:  "Withdraw comment success! ",
+			},
+			Comment: *comment,
+		}
 	} else {
-		// BUG：客户端用户处于登录状态，数据库删除了该用户信息，但是客户端的用户没有下线，功能异常
-		c.JSON(http.StatusOK, entity.Response{StatusCode: 1, StatusMsg: "User doesn't exist, Please Register!"})
+		return CommentActionResponse{
+			Response: entity.Response{
+				StatusCode: 1,
+				StatusMsg:  "Service Wrong!",
+			},
+		}
 	}
 }
 
-// CommentList all videos have same demo comment list
-func CommentList(c *gin.Context) {
-	comments, err := commentService.LoadComments()
-	if err != nil {
-		c.JSON(http.StatusOK, entity.Response{StatusCode: 1, StatusMsg: "Loading comments failed!"})
-	} else {
-		c.JSON(http.StatusOK, CommentListResponse{
-			Response:    entity.Response{StatusCode: 0},
-			CommentList: pack.CommentsPtrs(comments),
-		})
+func ErrorCommentResponse(err error) CommentActionResponse {
+	return CommentActionResponse{
+		Response: entity.Response{
+			StatusCode: 1,
+			StatusMsg:  err.Error(),
+		},
 	}
+}
 
+func FailCommentResponse(msg string) CommentActionResponse {
+	return CommentActionResponse{
+		Response: entity.Response{
+			StatusCode: -1,
+			StatusMsg:  msg,
+		},
+	}
 }

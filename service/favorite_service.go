@@ -5,7 +5,10 @@ import (
 	"douyin/dao"
 	"douyin/entity"
 	"douyin/pack"
+	"douyin/utils"
 	"sync"
+	"sync/atomic"
+	"time"
 )
 
 type FavoriteService struct {
@@ -30,7 +33,11 @@ func (s *FavoriteService) FindUserByToken(token string) (*entity.User, error) {
 	return pack.User(user), err
 }
 
-func (s *FavoriteService) FindVideoByToken(token string) ([]*entity.Video, error) {
+func (s *FavoriteService) FindVideosByToken(token string) ([]*entity.Video, error) {
+	// invalid token
+	if token == "" {
+		return nil, nil
+	}
 	videoIds, err := dao.NewFavoriteDaoInstance().QueryVideoIdByToken(token)
 	if err != nil {
 		return nil, err
@@ -43,26 +50,56 @@ func (s *FavoriteService) FindVideoByToken(token string) ([]*entity.Video, error
 	return videos, nil
 }
 
-func (s *FavoriteService) FavoriteAction(favorite *dao.Favorite) error {
-	err := dao.NewFavoriteDaoInstance().Save(favorite)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (s *FavoriteService) FavoriteCancel(favorite *dao.Favorite) error {
-	err := dao.NewFavoriteDaoInstance().Delete(favorite)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (s *FavoriteService) TotalComment() (int64, error) {
 	count, err := dao.NewFavoriteDaoInstance().Total()
 	if err != nil {
 		return -1, err
 	}
 	return count, nil
+}
+
+func (s *FavoriteService) LastId() (int64, error) {
+	count, err := dao.NewFavoriteDaoInstance().MaxId()
+	if err != nil {
+		return count, err
+	}
+	return count, nil
+}
+
+func (s *FavoriteService) Add(videoId int64, token string) error {
+	// 先查缓存 ..
+	if _, exist := usersLoginInfo[token]; !exist {
+		user, _ := dao.NewUserDaoInstance().QueryUserByToken(token)
+		if user == nil {
+			return utils.Error{Msg: "User doesn't exist, Please Register! "}
+		}
+		usersLoginInfo[token] = *pack.User(user)
+	}
+	// 点赞
+	favoriteIdSequence, _ := favoriteService.LastId()
+	atomic.AddInt64(&favoriteIdSequence, 1)
+	newFavorite := &dao.Favorite{
+		Id:        favoriteIdSequence,
+		UserToken: token,
+		VideoId:   videoId,
+		CreateAt:  time.Now(),
+	}
+	err := dao.NewFavoriteDaoInstance().Save(newFavorite)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *FavoriteService) Withdraw(videoId int64, token string) error {
+	// 删除评论
+	err := dao.NewFavoriteDaoInstance().Delete(videoId, token)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *FavoriteService) FavoriteList(token string) ([]*entity.Video, error) {
+	return s.FindVideosByToken(token)
 }

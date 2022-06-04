@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 )
 
-var usersLoginInfo = service.CopyULI()
+//var usersLoginInfo = service.CopyULI()
 
 // Publish check token then save upload file to public directory TODO
 func Publish(c *gin.Context) {

@@ -15,29 +15,9 @@ import (
 type UserService struct {
 }
 
-var usersLoginInfo = map[string]entity.User{
-	"zhangleidouyin": {
-		Id:            1,
-		Name:          "zhanglei",
-		FollowCount:   10,
-		FollowerCount: 5,
-		IsFollow:      true,
-	},
-	"qingcdma1330": {
-		Id:            1,
-		Name:          "Qing",
-		FollowCount:   100,
-		FollowerCount: 5000,
-		IsFollow:      false,
-	},
-}
-
 var userService *UserService
 var userOnce sync.Once
-
-func CopyULI() map[string]entity.User {
-	return usersLoginInfo
-}
+var usersLoginInfo = dao.CopyULI()
 
 func NewUserServiceInstance() *UserService {
 	userOnce.Do(
@@ -56,6 +36,22 @@ func (s *UserService) FindUserById(id int64) (*entity.User, error) {
 	}
 	// 包装用户信息
 	return pack.User(userModel), nil
+}
+
+func (s *UserService) FindUserByName(name string) (*entity.User, error) {
+	user, err := dao.NewUserDaoInstance().QueryUserByName(name)
+	if err != nil || user == nil {
+		return nil, err
+	}
+	return pack.User(user), nil
+}
+
+func (s *UserService) FindUserByToken(token string) (*entity.User, error) {
+	user, err := dao.NewUserDaoInstance().QueryUserByToken(token)
+	if err != nil || user == nil {
+		return nil, err
+	}
+	return pack.User(user), nil
 }
 
 // MFindUserById return empty map if no user is found
@@ -95,14 +91,6 @@ func (s *UserService) FindTokenByUserName(name string) (*string, error) {
 		}
 	}
 	return &status.Token, nil
-}
-
-func (s *UserService) FindUserByName(name string) (*entity.User, error) {
-	user, err := dao.NewUserDaoInstance().QueryUserByName(name)
-	if err != nil || user == nil {
-		return nil, err
-	}
-	return pack.User(user), nil
 }
 
 // AddUser 创建用户和token
@@ -155,22 +143,15 @@ func (s *UserService) Register(username, password string) error {
 }
 
 func (s *UserService) Login(username, password string) (*int64, *string, error) {
-	//// 校验用户名及密码是否合法
-	//err := InfoVerify(username, password)
-	//if err != nil {
-	//	return nil, nil, err
-	//}
 	// 用户校验
 	password = utils.Md5(password)
 	token := "<" + username + "><" + password + ">"
-	// 先查询缓存 ..
-	user, _ := dao.NewUserDaoInstance().QueryUserByName(username)
-	if _, exist := usersLoginInfo[token]; !exist {
-		if user == nil {
-			return nil, nil, utils.Error{Msg: "User doesn't exist, Please Register! "}
-		}
-		usersLoginInfo[token] = *pack.User(user)
+
+	user, _ := s.FindUserByName(username)
+	if user == nil {
+		return nil, nil, utils.Error{Msg: "User doesn't exist, Please Register! "}
 	}
+	usersLoginInfo[token] = *user
 	// 密码校验
 	result, _ := dao.NewUserDaoInstance().QueryUserByToken(token)
 	if result == nil {

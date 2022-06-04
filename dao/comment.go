@@ -41,31 +41,46 @@ func (d *CommentDao) QueryAllComment() ([]*Comment, error) {
 	return comments, nil
 }
 
-func (d *CommentDao) QueryCommentById(id int64) (*Comment, error) {
-	return nil, nil
+func (d *CommentDao) QueryCommentById(id int64) ([]*Comment, error) {
+	var comments []*Comment
+	err := db.Where("id = ?", id).Find(&comments).Error
+	if err != nil {
+		log.Fatal("batch find video by author_id err:" + err.Error())
+		return nil, err
+	}
+	return comments, nil
+}
+
+func (d *CommentDao) QueryCommentByVideoId(videoID int64) ([]*Comment, error) {
+	var comments []*Comment
+	err := db.Debug().Where("video_id = ?", videoID).Order("id DESC").Find(&comments).Error
+	if err != nil {
+		return nil, err
+	}
+	return comments, nil
 }
 
 func (d *CommentDao) QueryCommentByName(name string) (*Comment, error) {
 	return nil, nil
 }
 
-func (d *CommentDao) Save(comment *Comment) error {
+func (d *CommentDao) Save(comment *Comment) (*Comment, error) {
 	result := db.Create(&comment)
 	err := result.Error
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return comment, nil
 }
 
-func (d *CommentDao) DeleteCommentById(id int64) (int64, error) {
+func (d *CommentDao) DeleteById(id int64) (*Comment, error) {
 	var comment *Comment
 	result := db.Where("id = ?", id).Delete(&comment)
 	err := result.Error
 	if err != nil {
-		return -1, err
+		return nil, err
 	}
-	return comment.VideoId, nil
+	return comment, nil
 }
 
 func (d *CommentDao) Total() (int64, error) {

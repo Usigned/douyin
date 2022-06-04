@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"douyin/dao"
 	"douyin/entity"
 	"douyin/service"
 	"github.com/gin-gonic/gin"
@@ -9,6 +10,7 @@ import (
 )
 
 var userService = service.NewUserServiceInstance()
+var usersLoginInfo = dao.CopyULI()
 
 type UserResponse struct {
 	entity.Response

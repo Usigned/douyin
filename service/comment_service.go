@@ -5,7 +5,11 @@ import (
 	"douyin/dao"
 	"douyin/entity"
 	"douyin/pack"
+	"douyin/utils"
+	"fmt"
 	"sync"
+	"sync/atomic"
+	"time"
 )
 
 type CommentService struct {
@@ -22,26 +26,8 @@ func NewCommentServiceInstance() *CommentService {
 	return commentService
 }
 
-func (s *CommentService) LoadComments() ([]*entity.Comment, error) {
-	// 查询用户信息
-	commentModels, err := dao.NewCommentDaoInstance().QueryAllComment()
-	if err != nil {
-		return nil, err
-	}
-
-	// 包装用户信息
-	return pack.Comments(commentModels), nil
-}
-
-func (s *CommentService) FindUserById(id int64) (*entity.Comment, error) {
-	// 查询用户信息
-	commentModel, err := dao.NewCommentDaoInstance().QueryCommentById(id)
-	if err != nil {
-		return nil, err
-	}
-
-	// 包装用户信息
-	return pack.Comment(commentModel), nil
+func (s *CommentService) LoadComments(videoId int64) ([]*entity.Comment, error) {
+	return s.FindCommentByVideoId(videoId)
 }
 
 func (s *CommentService) FindCommentByName(name string) (*entity.Comment, error) {
@@ -55,28 +41,18 @@ func (s *CommentService) FindCommentByName(name string) (*entity.Comment, error)
 	return pack.Comment(commentModel), nil
 }
 
-func (s *CommentService) MFindCommentById(ids []int64) ([]*entity.Comment, error) {
-	return nil, nil
-}
-
-func (s *CommentService) CommentAction(comment *dao.Comment) error {
-	err := dao.NewCommentDaoInstance().Save(comment)
-	if err != nil {
-		return err
+func (s *CommentService) FindCommentByVideoId(videoID int64) ([]*entity.Comment, error) {
+	// invalid authorId
+	if videoID <= 0 {
+		return nil, nil
 	}
-	commentCount, err := s.TotalComment()
-	dao.NewVideoDaoInstance().UpdateCommentByID(comment.VideoId, commentCount)
-	return nil
-}
 
-func (s *CommentService) CommentDelete(id int64) error {
-	videoId, err := dao.NewCommentDaoInstance().DeleteCommentById(id)
+	comments, err := dao.NewCommentDaoInstance().QueryCommentByVideoId(videoID)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	commentCount, err := s.TotalComment()
-	dao.NewVideoDaoInstance().UpdateCommentByID(videoId, commentCount)
-	return nil
+
+	return pack.Comments(comments), nil
 }
 
 func (s *CommentService) TotalComment() (int64, error) {
@@ -93,4 +69,43 @@ func (s *CommentService) LastId() (int64, error) {
 		return count, err
 	}
 	return count, nil
+}
+
+func (s *CommentService) Add(videoId int64, token, text string) (*entity.Comment, error) {
+	// 先查缓存 ..
+	if _, exist := usersLoginInfo[token]; !exist {
+		user, _ := dao.NewUserDaoInstance().QueryUserByToken(token)
+		if user == nil {
+			return nil, utils.Error{Msg: "User doesn't exist, Please Register! "}
+		}
+		usersLoginInfo[token] = *pack.User(user)
+	}
+	//fmt.Println(usersLoginInfo)
+	//fmt.Println(videoId, token, text)
+	// 评论
+	date := time.Now().Format("01-02")
+	commentIdSequence, _ := commentService.LastId()
+	atomic.AddInt64(&commentIdSequence, 1)
+	newComment := &dao.Comment{
+		Id:       commentIdSequence,
+		VideoId:  videoId,
+		UserName: usersLoginInfo[token].Name,
+		Content:  text,
+		CreateAt: date,
+	}
+	fmt.Println(newComment)
+	comment, err := dao.NewCommentDaoInstance().Save(newComment)
+	if err != nil {
+		return nil, err
+	}
+	return pack.Comment(comment), nil
+}
+
+func (s *CommentService) Withdraw(videoId int64) (*entity.Comment, error) {
+	// 删除评论
+	oldComment, err := dao.NewCommentDaoInstance().DeleteById(videoId)
+	if err != nil {
+		return nil, err
+	}
+	return pack.Comment(oldComment), nil
 }

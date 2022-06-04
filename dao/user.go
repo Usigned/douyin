@@ -87,7 +87,7 @@ func (*UserDao) QueryUserByToken(token string) (*User, error) {
 	}
 	name := re.FindAllString(token, 2)[0]
 	password := re.FindAllString(token, 2)[1]
-	err = db.Where("name = ? and password = ?", name, password).First(&users).Error
+	err = db.Debug().Where("name = ? and password = ?", name, password).First(&users).Error
 	if err == gorm.ErrRecordNotFound {
 		return nil, err
 	}

@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"douyin/entity"
 	"gorm.io/gorm"
 	"log"
 	"sync"
@@ -17,6 +18,11 @@ type LoginStatusDao struct {
 
 var loginStatusDao *LoginStatusDao
 var loginStatusOnce sync.Once
+var usersLoginInfo = map[string]entity.User{}
+
+func CopyULI() map[string]entity.User {
+	return usersLoginInfo
+}
 
 // NewLoginStatusDaoInstance Singleton
 func NewLoginStatusDaoInstance() *LoginStatusDao {
