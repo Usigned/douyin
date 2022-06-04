@@ -31,5 +31,5 @@ func initRouter(r *gin.Engine) {
 	apiRouter.GET("/relation/follower/list/", controller.FollowerList)
 
 	// 静态资源
-	apiRouter.Static("/video", "./publish")
+	apiRouter.Static("/static", "./publish")
 }
