@@ -131,3 +131,13 @@ func (*UserDao) MaxId() (int64, error) {
 	}
 	return lastRec.Id, nil
 }
+
+func (*UserDao) IncreaseVideoCountByOne(id int64) error {
+	var user *User
+	err := db.Where("id = ?", id).First(&user).Error
+	if err != nil {
+		return err
+	}
+	user.VideoCount = user.VideoCount + 1
+	return db.Save(&user).Error
+}

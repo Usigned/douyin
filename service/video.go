@@ -46,13 +46,13 @@ func (s *VideoService) FindVideoById(id int64) (*entity.Video, error) {
 }
 
 // Feed 新视频流接口
-func (s *VideoService) Feed(latestTime int64, limit int) ([]*entity.Video, error) {
-	return s.FindVideoAfterTime(latestTime, limit)
+func (s *VideoService) Feed(latestTime int64, token string, limit int) ([]*entity.Video, error) {
+	return s.FindVideoAfterTime(latestTime, token, limit)
 }
 
 // FindVideoAfterTime return video info packed with user info
 // 老接口，新接口使用Feed
-func (s *VideoService) FindVideoAfterTime(latestTime int64, limit int) ([]*entity.Video, error) {
+func (s *VideoService) FindVideoAfterTime(latestTime int64, token string, limit int) ([]*entity.Video, error) {
 	var t time.Time
 	if latestTime == 0 {
 		t = time.Now()
@@ -72,18 +72,25 @@ func (s *VideoService) FindVideoAfterTime(latestTime int64, limit int) ([]*entit
 		return nil, err
 	}
 
-	//commentCount, err := dao.NewCommentDaoInstance().TotalById()
-	if err != nil {
-		return nil, err
-	}
-
 	userMap := pack.MUser(userModelMap)
 	videos := pack.Videos(videoModels)
 
 	for i, video := range videos {
 		video.Author = userMap[authorIds[i]]
-		video.CommentCount, _ = dao.NewCommentDaoInstance().TotalById(int64(i + 1))
-		dao.NewVideoDaoInstance().UpdateCommentByID(int64(i+1), video.CommentCount)
+
+		commentCount, _, err := dao.NewCommentDaoInstance().QueryCommentByVideoId(video.Id)
+		if err != nil {
+			return nil, err
+		}
+		video.CommentCount = commentCount
+
+		favoriteCount, err := dao.NewFavoriteDaoInstance().QueryFavoriteByVideoId(video.Id)
+		if err != nil {
+			return nil, err
+		}
+		video.FavoriteCount = favoriteCount
+
+		video.IsFavorite = dao.NewFavoriteDaoInstance().QueryFavoriteByUserToken(video.Id, token)
 	}
 
 	return videos, nil

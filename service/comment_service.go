@@ -47,7 +47,7 @@ func (s *CommentService) FindCommentByVideoId(videoID int64) ([]*entity.Comment,
 		return nil, nil
 	}
 
-	comments, err := dao.NewCommentDaoInstance().QueryCommentByVideoId(videoID)
+	_, comments, err := dao.NewCommentDaoInstance().QueryCommentByVideoId(videoID)
 	if err != nil {
 		return nil, err
 	}

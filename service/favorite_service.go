@@ -45,6 +45,7 @@ func (s *FavoriteService) FindVideosByToken(token string) ([]*entity.Video, erro
 	var videos []*entity.Video
 	for _, id := range videoIds {
 		video, _ := NewVideoServiceInstance().FindVideoById(id)
+		//video.IsFavorite = true
 		videos = append(videos, video)
 	}
 	return videos, nil

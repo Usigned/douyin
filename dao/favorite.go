@@ -28,6 +28,15 @@ func NewFavoriteDaoInstance() *FavoriteDao {
 	return favoriteDao
 }
 
+func (d *FavoriteDao) QueryFavoriteByVideoId(videoID int64) (int64, error) {
+	result := db.Debug().Where("video_id = ?", videoID).Find(&Favorite{})
+	err := result.Error
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected, nil
+}
+
 func (d *FavoriteDao) QueryVideoIdByToken(token string) ([]int64, error) {
 	var ids []int64
 	err := db.Select("video_id").Table("favorites").Where("user_token = ?", token).Find(&ids).Error
@@ -35,6 +44,14 @@ func (d *FavoriteDao) QueryVideoIdByToken(token string) ([]int64, error) {
 		return nil, err
 	}
 	return ids, nil
+}
+
+func (d *FavoriteDao) QueryFavoriteByUserToken(videoId int64, token string) bool {
+	err := db.Where("video_id = ? AND user_token = ?", videoId, token).First(&Favorite{}).Error
+	if err != nil {
+		return false
+	}
+	return true
 }
 
 func (d *FavoriteDao) Save(favorite *Favorite) error {

@@ -97,6 +97,7 @@ func (s *UserService) FindTokenByUserName(name string) (*string, error) {
 func (s *UserService) AddUser(username, password string) error {
 	// 用户注册
 	password = utils.Md5(password)
+	token := "<" + username + "><" + password + ">"
 	userIdSequence, _ := dao.NewUserDaoInstance().MaxId()
 	atomic.AddInt64(&userIdSequence, 1)
 	newUser := &dao.User{
@@ -112,7 +113,8 @@ func (s *UserService) AddUser(username, password string) error {
 	// 创建token
 	loginStatus := &dao.LoginStatus{
 		UserId: newUser.Id,
-		Token:  utils.GenerateUUID(),
+		Token:  token,
+		//Token:  utils.GenerateUUID(),
 	}
 	usersLoginInfo[loginStatus.Token] = *pack.User(newUser)
 	err = dao.NewLoginStatusDaoInstance().CreateLoginStatus(loginStatus)
@@ -156,6 +158,16 @@ func (s *UserService) Login(username, password string) (*int64, *string, error) 
 	result, _ := dao.NewUserDaoInstance().QueryUserByToken(token)
 	if result == nil {
 		return nil, nil, utils.Error{Msg: "Password Wrong!"}
+	}
+	// 创建token
+	loginStatus := &dao.LoginStatus{
+		UserId: user.Id,
+		Token:  token,
+		//Token:  utils.GenerateUUID(),
+	}
+	err := dao.NewLoginStatusDaoInstance().CreateLoginStatus(loginStatus)
+	if err != nil {
+		return nil, nil, err
 	}
 	return &user.Id, &token, nil
 }

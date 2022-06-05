@@ -4,7 +4,6 @@ import (
 	"douyin/entity"
 	"douyin/pack"
 	"douyin/utils"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -35,7 +34,7 @@ func CommentListFunc(videoID string) CommentListResponse {
 	if err != nil {
 		ErrorCommentListResponse(err)
 	}
-	fmt.Println("comments:", comments)
+	//fmt.Println("comments:", comments)
 	return CommentListResponse{
 		Response: entity.Response{
 			StatusCode: 0,
