@@ -61,23 +61,6 @@ func FavoriteActionFunc(videoId, token, actionType string) FavoriteActionRespons
 	}
 }
 
-// FavoriteList all users have same favorite video list
-//func FavoriteList(c *gin.Context) {
-//	token := c.Query("token")
-//	var videos []*entity.Video
-//
-//	videos, err := favoriteService.FindVideoByToken(token)
-//	if err != nil {
-//		c.JSON(http.StatusOK, entity.Response{StatusCode: 1, StatusMsg: "Pull Favorite Failed!"})
-//	}
-//
-//	c.JSON(http.StatusOK, VideoListResponse{
-//		Response: entity.Response{
-//			StatusCode: 0,
-//		},
-//		VideoList: pack.VideoPtrs(videos),
-//	})
-//}
 func ErrorFavoriteResponse(err error) FavoriteActionResponse {
 	return FavoriteActionResponse{
 		Response: entity.Response{

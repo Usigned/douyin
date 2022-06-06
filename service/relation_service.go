@@ -2,33 +2,56 @@ package service
 
 import (
 	"douyin/dao"
+	"douyin/entity"
+	"sync"
 )
 
-var id int64
-
-// FindFollowList 关注查询
-func FindFollowList(query dao.Query) ([]dao.UserList, error) {
-	id = query.UserId
-	return dao.FindFollowList(id)
+type RelationService struct {
 }
 
-// FindFollowerList 粉丝查询
-func FindFollowerList(query dao.Query) ([]dao.UserList, error) {
-	id = query.UserId
-	return dao.FindFollowerList(id)
+var relationService *RelationService
+var relationOnce sync.Once
+
+func NewRelationServiceInstance() *RelationService {
+	relationOnce.Do(
+		func() {
+			relationService = &RelationService{}
+		})
+	return relationService
 }
 
-// RelationAction 关注与取关操作
-func RelationAction(change dao.Change) error {
-	actionType := change.ActionType
-	userId := id
-	toUserId := change.ToUserId
-	if actionType == 1 {
-		//	关注
-		return dao.FollowAction(userId, toUserId)
-	} else if actionType == 2 {
-		//	取关
-		return dao.FollowerAction(userId, toUserId)
+// Follow 关注操作
+func (s *RelationService) Follow(userId, toUserId int64) error {
+	err := dao.FollowAction(userId, toUserId)
+	if err != nil {
+		return err
 	}
 	return nil
+}
+
+// Follower 取关操作
+func (s *RelationService) Follower(userId, toUserId int64) error {
+	err := dao.FollowerAction(userId, toUserId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// FollowList 关注查询
+func (s *RelationService) FollowList(userId int64) ([]entity.User, error) {
+	list, err := dao.FindFollowList(userId)
+	if err != nil {
+		return nil, err
+	}
+	return list, nil
+}
+
+// FollowerList 粉丝查询
+func (s *RelationService) FollowerList(userId int64) ([]entity.User, error) {
+	list, err := dao.FindFollowerList(userId)
+	if err != nil {
+		return nil, err
+	}
+	return list, nil
 }

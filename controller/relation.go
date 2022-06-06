@@ -1,71 +1,83 @@
 package controller
 
 import (
-	"douyin/dao"
 	"douyin/entity"
 	"douyin/service"
+	"douyin/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 )
 
-type AttentionController struct{}
+var relationService = service.NewRelationServiceInstance()
 
 type UserListResponse struct {
 	entity.Response
-	UserList []dao.UserList `json:"user_list"`
-}
-
-func FollowList(c *gin.Context) {
-	query := dao.Query{}
-	err := c.BindQuery(&query)
-	if err != nil {
-		return
-	}
-	var list []dao.UserList
-	list, _ = service.FindFollowList(query)
-	//fmt.Println(list)
-	c.JSON(
-		http.StatusOK,
-		UserListResponse{
-			Response: entity.Response{StatusCode: 0, StatusMsg: "查询成功"},
-			UserList: list,
-		},
-	)
-}
-
-func FollowerList(c *gin.Context) {
-	query := dao.Query{}
-	err := c.BindQuery(&query)
-	if err != nil {
-		return
-	}
-	var list []dao.UserList
-	list, _ = service.FindFollowerList(query)
-	//fmt.Println(list)
-	c.JSON(
-		http.StatusOK,
-		UserListResponse{
-			Response: entity.Response{StatusCode: 0, StatusMsg: "查询成功"},
-			UserList: list,
-		},
-	)
+	UserList []entity.User `json:"user_list"`
 }
 
 // RelationAction no practical effect, just check if token is valid
 func RelationAction(c *gin.Context) {
-	change := dao.Change{}
-	err := c.BindQuery(&change)
-	if err != nil {
-		return
+	c.JSON(http.StatusOK, RelationActionFunc(
+		c.Query("user_id"),
+		c.Query("token"),
+		c.Query("to_user_id"),
+		c.Query("action_type"),
+	))
+}
+
+func RelationActionFunc(userId, token, toUserId, actionType string) UserListResponse {
+	// TODO 使用token进行鉴权
+	if token == "" {
+		return ErrorRelationActionResponse(utils.Error{Msg: "empty token or user_id"})
 	}
-	if _, exist := usersLoginInfo[change.Token]; exist {
-		err := service.RelationAction(change)
+	//relationService.RelationAction()
+	uid, err := strconv.ParseInt(userId, 10, 64)
+	if err != nil {
+		return ErrorRelationActionResponse(err)
+	}
+	tUid, err := strconv.ParseInt(toUserId, 10, 64)
+	if err != nil {
+		return ErrorRelationActionResponse(err)
+	}
+	if actionType == "1" {
+		err = relationService.Follow(uid, tUid)
 		if err != nil {
-			return
-		} else {
-			c.JSON(http.StatusOK, entity.Response{StatusCode: 0})
+			return ErrorRelationActionResponse(err)
+		}
+		return UserListResponse{
+			Response: entity.Response{
+				StatusCode: 0,
+				StatusMsg:  "",
+			},
+		}
+	} else if actionType == "2" {
+		err = relationService.Follower(uid, tUid)
+		if err != nil {
+			return ErrorRelationActionResponse(err)
+		}
+		return UserListResponse{
+			Response: entity.Response{
+				StatusCode: 0,
+				StatusMsg:  "",
+			},
 		}
 	} else {
-		c.JSON(http.StatusOK, entity.Response{StatusCode: 1, StatusMsg: "User doesn't exist"})
+		return UserListResponse{
+			Response: entity.Response{
+				StatusCode: 1,
+				StatusMsg:  "Service Wrong!",
+			},
+		}
+	}
+}
+
+func ErrorRelationActionResponse(err error) UserListResponse {
+	return UserListResponse{
+		Response: entity.Response{
+			StatusCode: -1,
+			StatusMsg:  err.Error(),
+		},
+		UserList: nil,
 	}
 }

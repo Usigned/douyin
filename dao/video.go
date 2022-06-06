@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"fmt"
 	"gorm.io/gorm"
 	"log"
 	"sync"
@@ -76,6 +77,35 @@ func (*VideoDao) QueryVideoByAuthorId(authorId int64) ([]*Video, error) {
 func (*VideoDao) UpdateCommentByID(id int64, count int64) error {
 	err := db.Model(&Video{}).Where("id = ?", id).UpdateColumn("comment_count", count).Error
 	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (d *VideoDao) IncyFcByVideoId(id int64) error {
+	var favoriteCount Video
+	err := db.Model(&Video{}).Where("id = ?", id).Find(&favoriteCount).Error
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	err = db.Model(&Video{}).Where("id = ?", id).UpdateColumn("favorite_count", favoriteCount.FavoriteCount+1).Error
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	return nil
+}
+func (d *VideoDao) DescFcByVideoId(id int64) error {
+	var favoriteCount Video
+	err := db.Model(&Video{}).Where("id = ?", id).Find(&favoriteCount).Error
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	err = db.Model(&Video{}).Where("id = ?", id).UpdateColumn("favorite_count", favoriteCount.FavoriteCount-1).Error
+	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 	return nil

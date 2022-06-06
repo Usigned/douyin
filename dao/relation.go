@@ -6,42 +6,22 @@ import (
 	"gorm.io/gorm"
 )
 
-type Query struct {
-	Token  string `form:"token"`
-	UserId int64  `form:"user_id"`
+type AttentionDao struct {
 }
 
-type Change struct {
-	Token      string `form:"token"`
-	UserId     int64  `form:"user_id"`
-	ToUserId   int64  `form:"to_user_id"`
-	ActionType int64  `form:"action_type"`
-}
-
-type UserList struct {
-	Id            int64  `json:"id,omitempty"`
-	Name          string `json:"name,omitempty"`
-	FollowCount   int64  `json:"follow_count,omitempty"`
-	FollowerCount int64  `json:"follower_count,omitempty"`
-	IsFollow      bool   `json:"is_follow,omitempty"`
-}
-
-type Att struct {
+type Attention struct {
 	UserId          int64 `json:"user_id,omitempty"`
 	AttentionUserId int64 `json:"attention_user_id,omitempty"`
 	IsFollow        bool  `json:"is_follow,omitempty"`
 }
 
-func (v Att) TableName() string {
+func (v Attention) TableName() string {
 	return "attention"
 }
 
-type AttentionDao struct {
-}
-
 // FindFollowList 查询关注者的id、姓名、关注数、粉丝数、与当前用户的关系
-func FindFollowList(id int64) ([]UserList, error) {
-	var followList []UserList
+func FindFollowList(id int64) ([]entity.User, error) {
+	var followList []entity.User
 	if err := db.Debug().Table("users").Select("users.id,users.name,users.follow_count,users.follower_count,attention.is_follow").Joins("inner join attention on attention.attention_user_id=users.id").Where("attention.user_id=?", id).Find(&followList).Error; err != nil {
 		return nil, err
 	}
@@ -50,8 +30,8 @@ func FindFollowList(id int64) ([]UserList, error) {
 }
 
 // FindFollowerList 查询粉丝的id、姓名、关注数、粉丝数、与当前用户的关系
-func FindFollowerList(id int64) ([]UserList, error) {
-	var followerList []UserList
+func FindFollowerList(id int64) ([]entity.User, error) {
+	var followerList []entity.User
 	if err := db.Debug().Table("users").Select("users.id,users.name,users.follow_count,users.follower_count,attention.is_follow").Joins("inner join attention on attention.user_id=users.id").Where("attention.attention_user_id=?", id).Find(&followerList).Error; err != nil {
 		return nil, err
 	}
@@ -63,13 +43,13 @@ func FindFollowerList(id int64) ([]UserList, error) {
 func FollowAction(idA int64, idB int64) error {
 	//对关系表的操作
 	//1.进行关注操作前，判断是否单向被关注，如果是，则将关系is_follow改成双向true，否则不做处理
-	var reverse Att
+	var reverse Attention
 	err := db.Debug().Where("user_id = ? and attention_user_id = ?", idB, idA).First(&reverse).Update("is_follow", true).Error
 	fmt.Println(reverse)
 	if err != nil {
 		//如果对方没有关注自己，则进行插入时设置成单向
 		fmt.Println("没查到：", err)
-		relation := Att{
+		relation := Attention{
 			UserId:          idA,
 			AttentionUserId: idB,
 			IsFollow:        false,
@@ -78,7 +58,7 @@ func FollowAction(idA int64, idB int64) error {
 	} else {
 		//如果对方已经关注自己，则进行插入时设置成双向
 		fmt.Println("查到数据，并已经修改关系")
-		relation := Att{
+		relation := Attention{
 			UserId:          idA,
 			AttentionUserId: idB,
 			IsFollow:        true,
@@ -101,11 +81,11 @@ func FollowerAction(idA int64, idB int64) error {
 	//对关系表的操作
 
 	//1.进行取关操作前，判断是否双向关注，如果是，则将关系is_follow改成单向false，否则不做处理
-	var reverse Att
+	var reverse Attention
 	db.Debug().Where("user_id = ? and attention_user_id = ?", idB, idA).First(&reverse).Update("is_follow", false)
 	fmt.Println(reverse)
 	//2.然后删除关注关系
-	var relation Att
+	var relation Attention
 	if err := db.Debug().Where("user_id=? and attention_user_id =?", idA, idB).Delete(&relation).Error; err != nil {
 		fmt.Println(relation)
 		return err
