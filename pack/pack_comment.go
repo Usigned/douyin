@@ -8,17 +8,6 @@ import (
 	"douyin/entity"
 )
 
-func UserIds(commentModels []*dao.Comment) []int64 {
-	if commentModels != nil {
-		var ids = make([]int64, 0, len(commentModels))
-		for _, commentModel := range commentModels {
-			ids = append(ids, commentModel.UserId)
-		}
-		return ids
-	}
-	return []int64{}
-}
-
 func UserNames(commentModels []*dao.Comment) []string {
 	if commentModels != nil {
 		var ids = make([]string, 0, len(commentModels))
