@@ -96,7 +96,6 @@ func (s *CommentService) Add(videoId int64, token, text string) (*entity.Comment
 	newComment := &dao.Comment{
 		Id:       commentIdSequence,
 		VideoId:  videoId,
-		UserId:   usersLoginInfo[token].Id,
 		UserName: usersLoginInfo[token].Name,
 		Content:  text,
 		CreateAt: time.Now().Format("01-02"),
