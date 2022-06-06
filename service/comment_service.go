@@ -48,8 +48,6 @@ func (s *CommentService) FindCommentByVideoId(videoID int64) ([]*entity.Comment,
 	}
 
 	_, commentModels, err := dao.NewCommentDaoInstance().QueryCommentByVideoId(videoID)
-	userIds := pack.UserIds(commentModels)
-	fmt.Println(userIds)
 	userNames := pack.UserNames(commentModels)
 	fmt.Println(userNames)
 
