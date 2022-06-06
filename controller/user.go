@@ -8,8 +8,6 @@ import (
 	"strconv"
 )
 
-var userIdSequence = int64(1)
-
 type UserResponse struct {
 	entity.Response
 	User entity.User `json:"user"`

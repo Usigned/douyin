@@ -1,10 +1,12 @@
 package service
 
 import (
+	"fmt"
 	"github.com/Usigned/douyin/dao"
 	"github.com/Usigned/douyin/entity"
 	"github.com/Usigned/douyin/pack"
 	"github.com/Usigned/douyin/utils"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -46,30 +48,30 @@ func (s *VideoService) FindVideoById(id int64) (*entity.Video, error) {
 }
 
 // Feed 新视频流接口
-func (s *VideoService) Feed(latestTime int64, limit int) ([]*entity.Video, error) {
+func (s *VideoService) Feed(latestTime int64, limit int) (*int64, []*entity.Video, error) {
 	return s.FindVideoAfterTime(latestTime, limit)
 }
 
 // FindVideoAfterTime return video info packed with user info
 // 老接口，新接口使用Feed
-func (s *VideoService) FindVideoAfterTime(latestTime int64, limit int) ([]*entity.Video, error) {
+func (s *VideoService) FindVideoAfterTime(latestTime int64, limit int) (*int64, []*entity.Video, error) {
 	var t time.Time
 	if latestTime == 0 {
 		t = time.Now()
 	} else {
-		t = time.UnixMilli(latestTime)
+		t = time.Unix(latestTime, 0)
 	}
-
+	fmt.Printf("latestTime: %#v\n", t)
 	videoModels, err := dao.NewVideoDaoInstance().QueryVideoBeforeTime(t, limit)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	authorIds := pack.AuthorIds(videoModels)
 
 	userModelMap, err := dao.NewUserDaoInstance().MQueryUserById(authorIds)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	userMap := pack.MUser(userModelMap)
@@ -79,7 +81,16 @@ func (s *VideoService) FindVideoAfterTime(latestTime int64, limit int) ([]*entit
 		video.Author = userMap[authorIds[i]]
 	}
 
-	return videos, nil
+	var nextTime int64
+	if len(videoModels) > 0 {
+		nextTime = videoModels[len(videoModels)-1].CreateAt.Unix()
+	} else {
+		nextTime = time.Now().Unix()
+	}
+	println("latest time: " + strconv.FormatInt(latestTime, 10))
+	println("next time: " + strconv.FormatInt(nextTime, 10))
+
+	return &nextTime, videos, nil
 }
 
 // PublishList 新发布列表接口
