@@ -8,14 +8,33 @@ import (
 	"douyin/entity"
 )
 
+func UserIds(commentModels []*dao.Comment) []int64 {
+	if commentModels != nil {
+		var ids = make([]int64, 0, len(commentModels))
+		for _, commentModel := range commentModels {
+			ids = append(ids, commentModel.UserId)
+		}
+		return ids
+	}
+	return []int64{}
+}
+
+func UserNames(commentModels []*dao.Comment) []string {
+	if commentModels != nil {
+		var ids = make([]string, 0, len(commentModels))
+		for _, commentModel := range commentModels {
+			ids = append(ids, commentModel.UserName)
+		}
+		return ids
+	}
+	return []string{}
+}
+
 func Comment(commentModel *dao.Comment) *entity.Comment {
 	if commentModel != nil {
 		return &entity.Comment{
-			Id: commentModel.Id,
-			User: entity.User{
-				Id:   commentModel.Id,
-				Name: commentModel.UserName,
-			},
+			Id:         commentModel.Id,
+			User:       entity.User{},
 			Content:    commentModel.Content,
 			CreateDate: commentModel.CreateAt,
 		}

@@ -29,3 +29,14 @@ func MUser(userModels map[int64]dao.User) map[int64]entity.User {
 	}
 	return nil
 }
+
+func MUserByName(userModels map[string]dao.User) map[string]entity.User {
+	if userModels != nil {
+		var users = make(map[string]entity.User, len(userModels))
+		for name, userModel := range userModels {
+			users[name] = *User(&userModel)
+		}
+		return users
+	}
+	return nil
+}

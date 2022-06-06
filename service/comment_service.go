@@ -47,12 +47,24 @@ func (s *CommentService) FindCommentByVideoId(videoID int64) ([]*entity.Comment,
 		return nil, nil
 	}
 
-	_, comments, err := dao.NewCommentDaoInstance().QueryCommentByVideoId(videoID)
+	_, commentModels, err := dao.NewCommentDaoInstance().QueryCommentByVideoId(videoID)
+	userIds := pack.UserIds(commentModels)
+	fmt.Println(userIds)
+	userNames := pack.UserNames(commentModels)
+	fmt.Println(userNames)
+
+	userModelMap, err := dao.NewUserDaoInstance().MQueryUserByName(userNames)
 	if err != nil {
 		return nil, err
 	}
+	userMap := pack.MUserByName(userModelMap)
+	comments := pack.Comments(commentModels)
 
-	return pack.Comments(comments), nil
+	for i, comment := range comments {
+		comment.User = userMap[userNames[i]]
+	}
+
+	return comments, nil
 }
 
 func (s *CommentService) TotalComment() (int64, error) {
@@ -80,18 +92,16 @@ func (s *CommentService) Add(videoId int64, token, text string) (*entity.Comment
 		}
 		usersLoginInfo[token] = *pack.User(user)
 	}
-	//fmt.Println(usersLoginInfo)
-	//fmt.Println(videoId, token, text)
 	// 评论
-	date := time.Now().Format("01-02")
 	commentIdSequence, _ := commentService.LastId()
 	atomic.AddInt64(&commentIdSequence, 1)
 	newComment := &dao.Comment{
 		Id:       commentIdSequence,
 		VideoId:  videoId,
+		UserId:   usersLoginInfo[token].Id,
 		UserName: usersLoginInfo[token].Name,
 		Content:  text,
-		CreateAt: date,
+		CreateAt: time.Now().Format("01-02"),
 	}
 	fmt.Println(newComment)
 	comment, err := dao.NewCommentDaoInstance().Save(newComment)

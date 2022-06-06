@@ -18,10 +18,11 @@ type CommentListResponse struct {
 func CommentList(c *gin.Context) {
 	c.JSON(http.StatusOK, CommentListFunc(
 		c.Query("video_id"),
+		c.Query("token"),
 	))
 }
 
-func CommentListFunc(videoID string) CommentListResponse {
+func CommentListFunc(videoID, token string) CommentListResponse {
 	// TODO 使用token进行鉴权
 	if videoID == "" {
 		return ErrorCommentListResponse(utils.Error{Msg: "empty token or user_id"})
@@ -34,7 +35,6 @@ func CommentListFunc(videoID string) CommentListResponse {
 	if err != nil {
 		ErrorCommentListResponse(err)
 	}
-	//fmt.Println("comments:", comments)
 	return CommentListResponse{
 		Response: entity.Response{
 			StatusCode: 0,

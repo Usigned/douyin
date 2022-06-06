@@ -20,5 +20,5 @@ func main() {
 }
 
 func initDB() error {
-	return dao.Init(true)
+	return dao.Init(false)
 }

@@ -3,6 +3,7 @@ package controller
 import (
 	"douyin/entity"
 	"douyin/service"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -48,6 +49,7 @@ func CommentActionFunc(videoId, token, actionType, commentId, text string) Comme
 		}
 	} else if actionType == "2" {
 		cid, err := strconv.ParseInt(commentId, 10, 64)
+		fmt.Println("cid", cid)
 		if err != nil {
 			return ErrorCommentResponse(err)
 		}

@@ -10,6 +10,7 @@ import (
 type Comment struct {
 	Id       int64
 	VideoId  int64
+	UserId   int64
 	UserName string
 	Content  string
 	CreateAt string

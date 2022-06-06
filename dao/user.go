@@ -67,6 +67,19 @@ func (*UserDao) MQueryUserById(ids []int64) (map[int64]User, error) {
 	return userMap, nil
 }
 
+func (d *UserDao) MQueryUserByName(names []string) (map[string]User, error) {
+	var users []*User
+	err := db.Where("name in (?)", names).Find(&users).Error
+	if err != nil {
+		return nil, err
+	}
+	var userMap = make(map[string]User, len(users))
+	for _, user := range users {
+		userMap[user.Name] = *user
+	}
+	return userMap, nil
+}
+
 func (*UserDao) QueryUserByName(name string) (*User, error) {
 	var user *User
 	err := db.Where("name = ?", name).First(&user).Error
