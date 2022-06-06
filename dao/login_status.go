@@ -50,15 +50,15 @@ func (*LoginStatusDao) CreateLoginStatus(loginStatus *LoginStatus) error {
 	return db.Create(&loginStatus).Error
 }
 
-func (*LoginStatusDao) QueryUserIdByToken(token string) (*int64, error) {
+func (*LoginStatusDao) QueryUserIdByToken(token string) (int64, error) {
 	var loginStatus *LoginStatus
 	err := db.Where("token = ?", token).First(&loginStatus).Error
 	if err == gorm.ErrRecordNotFound {
-		return nil, nil
+		return -1, nil
 	}
 	if err != nil {
 		log.Fatal("find loginStatus by token err:" + err.Error())
-		return nil, err
+		return -1, err
 	}
-	return &loginStatus.UserId, nil
+	return loginStatus.UserId, nil
 }

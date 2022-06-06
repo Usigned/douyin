@@ -138,13 +138,13 @@ func (s VideoService) Publish(token, playUrl, coverUrl, title string) error {
 	if err != nil {
 		return err
 	}
-	if userId == nil {
+	if userId == -1 {
 		return utils.Error{Msg: "user not exist"}
 	}
 
 	// 保存 video
 	videoModel := dao.Video{
-		AuthorId:      *userId,
+		AuthorId:      userId,
 		PlayUrl:       playUrl,
 		CoverUrl:      coverUrl,
 		Title:         title,
@@ -157,7 +157,7 @@ func (s VideoService) Publish(token, playUrl, coverUrl, title string) error {
 		return err
 	}
 	// 用户的视频数增加
-	err = dao.NewUserDaoInstance().IncreaseVideoCountByOne(*userId)
+	err = dao.NewUserDaoInstance().IncreaseVideoCountByOne(userId)
 	if err != nil {
 		return err
 	}

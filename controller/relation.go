@@ -1,9 +1,11 @@
 package controller
 
 import (
+	"douyin/dao"
 	"douyin/entity"
 	"douyin/service"
 	"douyin/utils"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -32,16 +34,27 @@ func RelationActionFunc(userId, token, toUserId, actionType string) UserListResp
 		return ErrorRelationActionResponse(utils.Error{Msg: "empty token or user_id"})
 	}
 	//relationService.RelationAction()
-	uid, err := strconv.ParseInt(userId, 10, 64)
-	if err != nil {
-		return ErrorRelationActionResponse(err)
+	var uid int64
+	var err error
+	if userId == "" {
+		uid, err = dao.NewLoginStatusDaoInstance().QueryUserIdByToken(token)
+		if err != nil {
+			return ErrorRelationActionResponse(err)
+		}
+	} else {
+		uid, err = strconv.ParseInt(userId, 10, 64)
+		if err != nil {
+			return ErrorRelationActionResponse(err)
+		}
 	}
+	fmt.Println("userId", userId)
+	fmt.Println("toUserId", toUserId)
 	tUid, err := strconv.ParseInt(toUserId, 10, 64)
 	if err != nil {
 		return ErrorRelationActionResponse(err)
 	}
 	if actionType == "1" {
-		err = relationService.Follow(uid, tUid)
+		err = relationService.Follow(uid, tUid, token)
 		if err != nil {
 			return ErrorRelationActionResponse(err)
 		}
@@ -52,7 +65,7 @@ func RelationActionFunc(userId, token, toUserId, actionType string) UserListResp
 			},
 		}
 	} else if actionType == "2" {
-		err = relationService.Follower(uid, tUid)
+		err = relationService.Follower(uid, tUid, token)
 		if err != nil {
 			return ErrorRelationActionResponse(err)
 		}

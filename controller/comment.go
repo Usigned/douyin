@@ -3,7 +3,6 @@ package controller
 import (
 	"douyin/entity"
 	"douyin/service"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -49,7 +48,6 @@ func CommentActionFunc(videoId, token, actionType, commentId, text string) Comme
 		}
 	} else if actionType == "2" {
 		cid, err := strconv.ParseInt(commentId, 10, 64)
-		fmt.Println("cid", cid)
 		if err != nil {
 			return ErrorCommentResponse(err)
 		}
@@ -77,6 +75,7 @@ func CommentActionFunc(videoId, token, actionType, commentId, text string) Comme
 	}
 }
 
+// ErrorCommentResponse 评论操作错误
 func ErrorCommentResponse(err error) CommentActionResponse {
 	return CommentActionResponse{
 		Response: entity.Response{
@@ -86,6 +85,7 @@ func ErrorCommentResponse(err error) CommentActionResponse {
 	}
 }
 
+// FailCommentResponse 评论操作失败
 func FailCommentResponse(msg string) CommentActionResponse {
 	return CommentActionResponse{
 		Response: entity.Response{
