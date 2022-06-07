@@ -1,27 +1,23 @@
 package controller
 
 import (
+	"douyin/entity"
+	"douyin/service"
+	"douyin/utils"
 	"fmt"
-	"github.com/Usigned/douyin/entity"
 	"github.com/gin-gonic/gin"
+
+	"mime/multipart"
 	"net/http"
 	"path/filepath"
 )
 
-type VideoListResponse struct {
-	entity.Response
-	VideoList []entity.Video `json:"video_list"`
-}
+//var usersLoginInfo = service.CopyULI()
 
-// Publish check token then save upload file to public directory
+// Publish check token then save upload file to public directory TODO
 func Publish(c *gin.Context) {
 	token := c.PostForm("token")
-
-	if _, exist := usersLoginInfo[token]; !exist {
-		c.JSON(http.StatusOK, entity.Response{StatusCode: 1, StatusMsg: "User doesn't exist"})
-		return
-	}
-
+	title := c.PostForm("title")
 	data, err := c.FormFile("data")
 	if err != nil {
 		c.JSON(http.StatusOK, entity.Response{
@@ -30,31 +26,46 @@ func Publish(c *gin.Context) {
 		})
 		return
 	}
-
-	filename := filepath.Base(data.Filename)
-	user := usersLoginInfo[token]
-	finalName := fmt.Sprintf("%d_%s", user.Id, filename)
-	saveFile := filepath.Join("./public/", finalName)
-	if err := c.SaveUploadedFile(data, saveFile); err != nil {
-		c.JSON(http.StatusOK, entity.Response{
-			StatusCode: 1,
-			StatusMsg:  err.Error(),
-		})
-		return
-	}
-
-	c.JSON(http.StatusOK, entity.Response{
-		StatusCode: 0,
-		StatusMsg:  finalName + " uploaded successfully",
-	})
+	c.JSON(http.StatusOK, PublishFunc(token, title, data, c))
 }
 
-// PublishList all users have same publish video list
-func PublishList(c *gin.Context) {
-	c.JSON(http.StatusOK, VideoListResponse{
-		Response: entity.Response{
-			StatusCode: 0,
-		},
-		VideoList: DemoVideos,
-	})
+// PublishFunc TODO
+func PublishFunc(token, title string, data *multipart.FileHeader, c *gin.Context) entity.Response {
+	//检查文件是否为空
+	if data == nil {
+		return ErrorResponse(utils.Error{Msg: "empty data file"})
+	}
+	//检查后缀名
+	ext := filepath.Ext(data.Filename)
+	if ext != ".mp4" {
+		return ErrorResponse(utils.Error{Msg: "unsupported file extension"})
+	}
+	//存文件
+	filepath.Base(data.Filename)
+	filename := fmt.Sprintf("%s%s", utils.GenerateUUID(), ext)
+	saveFile := filepath.Join("./publish/", filename)
+	if err := c.SaveUploadedFile(data, saveFile); err != nil {
+		return ErrorResponse(err)
+	}
+	//生成视频信息
+	// TODO 目前是数据库硬编码域名，后续可改成动态
+	// http://10.0.2.2/douyin/static/filename
+	playUrl := utils.VideoUrlPrefix + filename
+	coverUrl := utils.DefaultCoverUrl
+
+	err := service.NewVideoServiceInstance().Publish(token, playUrl, coverUrl, title)
+	if err != nil {
+		return ErrorResponse(err)
+	}
+	return entity.Response{
+		StatusCode: 0,
+		StatusMsg:  "success",
+	}
+}
+
+func ErrorResponse(err error) entity.Response {
+	return entity.Response{
+		StatusCode: 1,
+		StatusMsg:  err.Error(),
+	}
 }

@@ -1,6 +1,6 @@
 package controller
 
-import "github.com/Usigned/douyin/entity"
+import "douyin/entity"
 
 var DemoVideos = []entity.Video{
 	{
