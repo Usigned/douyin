@@ -19,15 +19,13 @@ type FeedResponse struct {
 
 // Feed use userService and videoService to query data
 func Feed(c *gin.Context) {
-	c.JSON(http.StatusOK, FeedFunc(c.Query("latestTime"), c.Query("token")))
+	c.JSON(http.StatusOK, FeedFunc(c.Query("latest_time"), c.Query("token")))
 }
 
 func FeedFunc(latestTime string, token string) FeedResponse {
 	// TODO 使用token鉴权
-
 	timeInt, _ := strconv.ParseInt(latestTime, 10, 64)
-	// 加入token进行用户鉴权
-	videos, err := service.NewVideoServiceInstance().Feed(timeInt, token, utils.DefaultLimit)
+	nextTime, videos, err := service.NewVideoServiceInstance().Feed(timeInt, token, utils.DefaultLimit)
 	// service层出错
 	if err != nil {
 		return ErrorFeedResponse(err)
@@ -39,7 +37,7 @@ func FeedFunc(latestTime string, token string) FeedResponse {
 			StatusMsg:  "success",
 		},
 		VideoList: pack.VideoPtrs(videos),
-		NextTime:  time.Now().Unix(),
+		NextTime:  *nextTime,
 	}
 }
 
@@ -50,6 +48,6 @@ func ErrorFeedResponse(err error) FeedResponse {
 			StatusMsg:  err.Error(),
 		},
 		VideoList: nil,
-		NextTime:  time.Now().Unix(),
+		NextTime:  time.Now().UnixMilli(),
 	}
 }

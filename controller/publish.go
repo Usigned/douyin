@@ -49,7 +49,7 @@ func PublishFunc(token, title string, data *multipart.FileHeader, c *gin.Context
 	}
 	//生成视频信息
 	// TODO 目前是数据库硬编码域名，后续可改成动态
-	// http://127.0.0.1/douyin/video/filename
+	// http://10.0.2.2/douyin/static/filename
 	playUrl := utils.VideoUrlPrefix + filename
 	coverUrl := utils.DefaultCoverUrl
 
