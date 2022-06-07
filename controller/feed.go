@@ -25,7 +25,7 @@ func Feed(c *gin.Context) {
 func FeedFunc(latestTime string, token string) FeedResponse {
 	// TODO 使用token鉴权
 	timeInt, _ := strconv.ParseInt(latestTime, 10, 64)
-	nextTime, videos, err := service.NewVideoServiceInstance().Feed(timeInt, utils.DefaultLimit)
+	nextTime, videos, err := service.NewVideoServiceInstance().Feed(timeInt, token, utils.DefaultLimit)
 	// service层出错
 	if err != nil {
 		return ErrorFeedResponse(err)
