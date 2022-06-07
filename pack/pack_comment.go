@@ -22,8 +22,11 @@ func UserNames(commentModels []*dao.Comment) []string {
 func Comment(commentModel *dao.Comment) *entity.Comment {
 	if commentModel != nil {
 		return &entity.Comment{
-			Id:         commentModel.Id,
-			User:       entity.User{},
+			Id: commentModel.Id,
+			User: entity.User{
+				Id:   commentModel.Id,
+				Name: commentModel.UserName,
+			},
 			Content:    commentModel.Content,
 			CreateDate: commentModel.CreateAt,
 		}
