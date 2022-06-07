@@ -97,6 +97,10 @@ func (s *UserService) FindTokenByUserName(name string) (*string, error) {
 
 // AddUser 创建用户和token
 func (s *UserService) AddUser(username, password string) error {
+	oldUser, _ := dao.NewUserDaoInstance().QueryUserByName(username)
+	if oldUser != nil {
+		return utils.Error{Msg: "User already exists, please do not register again! "}
+	}
 	// 用户注册
 	password = utils.Md5(password)
 	token := "<" + username + "><" + password + ">"
