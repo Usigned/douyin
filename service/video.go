@@ -46,14 +46,7 @@ func (s *VideoService) FindVideoById(id int64) (*entity.Video, error) {
 	return video, nil
 }
 
-// Feed 新视频流接口
 func (s *VideoService) Feed(latestTime int64, token string, limit int) (*int64, []*entity.Video, error) {
-	return s.FindVideoAfterTime(latestTime, token, limit)
-}
-
-// FindVideoAfterTime return video info packed with user info
-// 老接口，新接口使用Feed
-func (s *VideoService) FindVideoAfterTime(latestTime int64, token string, limit int) (*int64, []*entity.Video, error) {
 	var t time.Time
 	if latestTime == 0 {
 		t = time.Now()
@@ -118,13 +111,7 @@ func (s *VideoService) FindVideoAfterTime(latestTime int64, token string, limit 
 	return &nextTime, videos, nil
 }
 
-// PublishList 新发布列表接口
 func (s *VideoService) PublishList(authorId int64) ([]*entity.Video, error) {
-	return s.FindVideoByAuthorId(authorId)
-}
-
-// FindVideoByAuthorId 老接口，新接口使用PublishList
-func (s *VideoService) FindVideoByAuthorId(authorId int64) ([]*entity.Video, error) {
 	// invalid authorId
 	if authorId <= 0 {
 		return nil, nil

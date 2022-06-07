@@ -26,8 +26,7 @@ func NewUserServiceInstance() *UserService {
 	return userService
 }
 
-// FindUserById return nil if no user is found
-func (s *UserService) FindUserById(id int64) (*entity.User, error) {
+func (s *UserService) UserInfo(id int64) (*entity.User, error) {
 	// 查询用户信息
 	userModel, err := dao.NewUserDaoInstance().QueryUserById(id)
 	if err != nil {
@@ -46,44 +45,6 @@ func (s *UserService) FindUserByName(name string) (*entity.User, error) {
 		return nil, err
 	}
 	return pack.User(user), nil
-}
-
-func (s *UserService) FindUserByToken(token string) (*entity.User, error) {
-	user, err := dao.NewUserDaoInstance().QueryUserByToken(token)
-	if err != nil || user == nil {
-		return nil, err
-	}
-	return pack.User(user), nil
-}
-
-// FindTokenByUserName 根据用户名查找token，如果用户不存在则抛出异常，如果用户存在,token不存在则创建新token
-func (s *UserService) FindTokenByUserName(name string) (*string, error) {
-	// 查询用户是否存在
-	user, err := dao.NewUserDaoInstance().QueryUserByName(name)
-	if err != nil {
-		return nil, err
-	}
-	if user == nil {
-		return nil, utils.Error{Msg: "user not exist"}
-	}
-	// 查询现有的token
-	status, err := dao.NewLoginStatusDaoInstance().QueryTokenByUserId(user.Id)
-	if err != nil {
-		return nil, err
-	}
-
-	// token不存在
-	if status == nil {
-		status := &dao.LoginStatus{
-			UserId: user.Id,
-			Token:  utils.GenerateUUID(),
-		}
-		err := dao.NewLoginStatusDaoInstance().CreateLoginStatus(status)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return &status.Token, nil
 }
 
 // AddUser 创建用户和token

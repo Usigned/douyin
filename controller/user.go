@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"douyin/dao"
 	"douyin/entity"
 	"douyin/service"
 	"github.com/gin-gonic/gin"
@@ -10,7 +9,6 @@ import (
 )
 
 var userService = service.NewUserServiceInstance()
-var usersLoginInfo = dao.CopyULI()
 
 type UserResponse struct {
 	entity.Response
@@ -31,14 +29,13 @@ func UserInfoFunc(userId, token string) UserResponse {
 		return ErrorUserResponse(err)
 	}
 
-	user, err := service.NewUserServiceInstance().FindUserById(uid)
+	user, err := service.NewUserServiceInstance().UserInfo(uid)
 	if err != nil {
 		return ErrorUserResponse(err)
 	}
 	if user == nil {
 		return FailUserResponse("user not exist: uid " + strconv.FormatInt(uid, 10))
 	}
-	//service.NewRelationServiceInstance().
 	return UserResponse{
 		Response: entity.Response{
 			StatusCode: 0,

@@ -6,15 +6,15 @@ import (
 	"douyin/utils"
 	"fmt"
 	"github.com/gin-gonic/gin"
-
 	"mime/multipart"
 	"net/http"
+	"os"
 	"path/filepath"
 )
 
-//var usersLoginInfo = service.CopyULI()
+// 是否自动生成封面，需要配置环境，默认为否
+var useGeneratedCover = utils.UseGeneratedCover
 
-// Publish check token then save upload file to public directory TODO
 func Publish(c *gin.Context) {
 	token := c.PostForm("token")
 	title := c.PostForm("title")
@@ -29,7 +29,6 @@ func Publish(c *gin.Context) {
 	c.JSON(http.StatusOK, PublishFunc(token, title, data, c))
 }
 
-// PublishFunc TODO
 func PublishFunc(token, title string, data *multipart.FileHeader, c *gin.Context) entity.Response {
 	//检查文件是否为空
 	if data == nil {
@@ -42,18 +41,36 @@ func PublishFunc(token, title string, data *multipart.FileHeader, c *gin.Context
 	}
 	//存文件
 	filepath.Base(data.Filename)
-	filename := fmt.Sprintf("%s%s", utils.GenerateUUID(), ext)
-	saveFile := filepath.Join("./publish/", filename)
+	fileName := utils.GenerateUUID()
+	videoFileName := fmt.Sprintf("%s%s", fileName, ext)
+	coverName := fmt.Sprintf("%s%s", fileName, ".jpg")
+
+	// 判断文件夹是否存在
+	var dir = "./publish/"
+	_, err := os.Stat(dir)
+	if os.IsNotExist(err) {
+		os.Mkdir(dir, os.ModePerm)
+	}
+
+	saveFile := filepath.Join(dir, videoFileName)
 	if err := c.SaveUploadedFile(data, saveFile); err != nil {
 		return ErrorResponse(err)
 	}
 	//生成视频信息
-	// TODO 目前是数据库硬编码域名，后续可改成动态
-	// http://10.0.2.2/douyin/static/filename
-	playUrl := utils.VideoUrlPrefix + filename
-	coverUrl := utils.DefaultCoverUrl
+	// TODO 目前是数据库硬编码ip:port，后续可改成动态
+	playUrl := utils.VideoUrlPrefix + videoFileName
+	//封面
+	var coverUrl string
+	if useGeneratedCover {
+		coverUrl = utils.VideoUrlPrefix + coverName
+		// generate video cover
+		coverFilePath := filepath.Join(dir, coverName)
+		utils.ReadFrameAsJpeg(saveFile, 1, coverFilePath)
+	} else {
+		coverUrl = utils.DefaultCoverUrl
+	}
 
-	err := service.NewVideoServiceInstance().Publish(token, playUrl, coverUrl, title)
+	err = service.NewVideoServiceInstance().Publish(token, playUrl, coverUrl, title)
 	if err != nil {
 		return ErrorResponse(err)
 	}
