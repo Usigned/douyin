@@ -59,7 +59,7 @@ func (s *VideoService) FindVideoAfterTime(latestTime int64, limit int) (*int64, 
 	if latestTime == 0 {
 		t = time.Now()
 	} else {
-		t = time.Unix(latestTime, 0)
+		t = time.UnixMilli(latestTime)
 	}
 	fmt.Printf("latestTime: %#v\n", t)
 	videoModels, err := dao.NewVideoDaoInstance().QueryVideoBeforeTime(t, limit)
@@ -83,9 +83,9 @@ func (s *VideoService) FindVideoAfterTime(latestTime int64, limit int) (*int64, 
 
 	var nextTime int64
 	if len(videoModels) > 0 {
-		nextTime = videoModels[len(videoModels)-1].CreateAt.Unix()
+		nextTime = videoModels[len(videoModels)-1].CreateAt.UnixMilli()
 	} else {
-		nextTime = time.Now().Unix()
+		nextTime = time.Now().UnixMilli()
 	}
 	println("latest time: " + strconv.FormatInt(latestTime, 10))
 	println("next time: " + strconv.FormatInt(nextTime, 10))
