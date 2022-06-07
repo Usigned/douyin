@@ -11,7 +11,7 @@ func User(userModel *dao.User) *entity.User {
 		return &entity.User{
 			Id:            userModel.Id,
 			Name:          userModel.Name,
-			FollowCount:   userModel.FollowerCount,
+			FollowCount:   userModel.FollowCount,
 			FollowerCount: userModel.FollowerCount,
 		}
 	}
@@ -30,11 +30,11 @@ func Users(userModels []*dao.User) []*entity.User {
 }
 
 // MUser if param is nil then return empty map
-func MUser(userModels map[int64]dao.User) map[int64]entity.User {
+func MUser(userModels map[int64]dao.User) map[int64]*entity.User {
 	if userModels != nil {
-		var users = make(map[int64]entity.User, len(userModels))
+		var users = make(map[int64]*entity.User, len(userModels))
 		for id, userModel := range userModels {
-			users[id] = *User(&userModel)
+			users[id] = User(&userModel)
 		}
 		return users
 	}
