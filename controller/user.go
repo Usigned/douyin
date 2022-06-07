@@ -20,12 +20,12 @@ type UserResponse struct {
 // UserInfo /douyin/user
 func UserInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, UserInfoFunc(
-		c.Query("token"),
 		c.Query("user_id"),
+		c.Query("token"),
 	))
 }
 
-func UserInfoFunc(token, userId string) UserResponse {
+func UserInfoFunc(userId, token string) UserResponse {
 	uid, err := strconv.ParseInt(userId, 10, 64)
 	if err != nil {
 		return ErrorUserResponse(err)
@@ -38,6 +38,7 @@ func UserInfoFunc(token, userId string) UserResponse {
 	if user == nil {
 		return FailUserResponse("user not exist: uid " + strconv.FormatInt(uid, 10))
 	}
+	//service.NewRelationServiceInstance().
 	return UserResponse{
 		Response: entity.Response{
 			StatusCode: 0,

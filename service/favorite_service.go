@@ -89,20 +89,12 @@ func (s *FavoriteService) Add(videoId int64, token string) error {
 	if err != nil {
 		return err
 	}
-	err = dao.NewVideoDaoInstance().IncyFcByVideoId(videoId)
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
 func (s *FavoriteService) Withdraw(videoId int64, token string) error {
 	// 删除评论
 	err := dao.NewFavoriteDaoInstance().Delete(videoId, token)
-	if err != nil {
-		return err
-	}
-	err = dao.NewVideoDaoInstance().DescFcByVideoId(videoId)
 	if err != nil {
 		return err
 	}

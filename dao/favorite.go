@@ -1,6 +1,8 @@
 package dao
 
 import (
+	"fmt"
+	"gorm.io/gorm"
 	"log"
 	"sync"
 	"time"
@@ -60,12 +62,24 @@ func (d *FavoriteDao) Save(favorite *Favorite) error {
 	if err != nil {
 		return err
 	}
+
+	err = db.Debug().Model(&Video{}).Where("id = ?", favorite.VideoId).Update("favorite_count", gorm.Expr("favorite_count + ?", 1)).Error
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
 	return nil
 }
 
 func (d *FavoriteDao) Delete(videoId int64, token string) error {
 	err := db.Where("user_token = ? AND video_id = ?", token, videoId).Delete(&Favorite{}).Error
 	if err != nil {
+		return err
+	}
+
+	err = db.Debug().Model(&Video{}).Where("id = ?", videoId).Update("favorite_count", gorm.Expr("favorite_count - ?", 1)).Error
+	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 	return nil

@@ -1,9 +1,8 @@
 package controller
 
 import (
-	"douyin/dao"
 	"douyin/entity"
-	"douyin/utils"
+	"douyin/pack"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -19,29 +18,18 @@ func FollowList(c *gin.Context) {
 func FollowerList(c *gin.Context) {
 	c.JSON(http.StatusOK, FollowerListFunc(
 		c.Query("user_id"),
+		//c.Query("toUserId"),
 		c.Query("token"),
 	))
 }
 
 func FollowListFunc(userId, token string) UserListResponse {
-	// TODO 使用token进行鉴权
-	if token == "" {
-		return ErrorRelationActionResponse(utils.Error{Msg: "empty token or user_id"})
+	// userId 当前用户
+	uid, err := strconv.ParseInt(userId, 10, 64)
+	if err != nil {
+		return ErrorRelationActionResponse(err)
 	}
-	var uid int64
-	var err error
-	if userId == "" {
-		uid, err = dao.NewLoginStatusDaoInstance().QueryUserIdByToken(token)
-		if err != nil {
-			return ErrorRelationActionResponse(err)
-		}
-	} else {
-		uid, err = strconv.ParseInt(userId, 10, 64)
-		if err != nil {
-			return ErrorRelationActionResponse(err)
-		}
-	}
-	list, err := relationService.FollowList(uid, token)
+	relations, err := relationService.FollowList(uid, token)
 	if err != nil {
 		return ErrorFollowListResponse(err)
 	}
@@ -50,29 +38,16 @@ func FollowListFunc(userId, token string) UserListResponse {
 			StatusCode: 0,
 			StatusMsg:  "Pull Follow Success!",
 		},
-		UserList: list,
+		UserList: pack.RelationsPtrs(relations),
 	}
 }
 
 func FollowerListFunc(userId, token string) UserListResponse {
-	// TODO 使用token进行鉴权
-	if token == "" {
-		return ErrorFollowerListResponse(utils.Error{Msg: "empty token or user_id"})
+	uid, err := strconv.ParseInt(userId, 10, 64)
+	if err != nil {
+		return ErrorRelationActionResponse(err)
 	}
-	var uid int64
-	var err error
-	if userId == "" {
-		uid, err = dao.NewLoginStatusDaoInstance().QueryUserIdByToken(token)
-		if err != nil {
-			return ErrorRelationActionResponse(err)
-		}
-	} else {
-		uid, err = strconv.ParseInt(userId, 10, 64)
-		if err != nil {
-			return ErrorRelationActionResponse(err)
-		}
-	}
-	list, err := relationService.FollowerList(uid, token)
+	relations, err := relationService.FollowerList(uid, token)
 	if err != nil {
 		return ErrorFollowerListResponse(err)
 	}
@@ -81,7 +56,7 @@ func FollowerListFunc(userId, token string) UserListResponse {
 			StatusCode: 0,
 			StatusMsg:  "Pull Follower Success!",
 		},
-		UserList: list,
+		UserList: pack.RelationsPtrs(relations),
 	}
 }
 

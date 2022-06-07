@@ -18,6 +18,17 @@ func User(userModel *dao.User) *entity.User {
 	return nil
 }
 
+func Users(userModels []*dao.User) []*entity.User {
+	if userModels != nil {
+		var users = make([]*entity.User, 0, len(userModels))
+		for _, model := range userModels {
+			users = append(users, User(model))
+		}
+		return users
+	}
+	return nil
+}
+
 // MUser if param is nil then return empty map
 func MUser(userModels map[int64]dao.User) map[int64]entity.User {
 	if userModels != nil {

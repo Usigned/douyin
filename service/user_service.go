@@ -34,8 +34,11 @@ func (s *UserService) FindUserById(id int64) (*entity.User, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	// 包装用户信息
-	return pack.User(userModel), nil
+	user := pack.User(userModel)
+	//user.IsFollow = dao.NewRelationDaoInstance().
+	return user, nil
 }
 
 func (s *UserService) FindUserByName(name string) (*entity.User, error) {
