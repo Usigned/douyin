@@ -9,7 +9,6 @@ import (
 	"errors"
 	"strings"
 	"sync"
-	"sync/atomic"
 )
 
 type UserService struct {
@@ -37,7 +36,7 @@ func (s *UserService) FindUserById(id int64) (*entity.User, error) {
 
 	// 包装用户信息
 	user := pack.User(userModel)
-	//user.IsFollow = dao.NewRelationDaoInstance().
+	user.IsFollow = true
 	return user, nil
 }
 
@@ -101,10 +100,10 @@ func (s *UserService) AddUser(username, password string) error {
 	// 用户注册
 	password = utils.Md5(password)
 	token := "<" + username + "><" + password + ">"
-	userIdSequence, _ := dao.NewUserDaoInstance().MaxId()
-	atomic.AddInt64(&userIdSequence, 1)
+	//userIdSequence, _ := dao.NewUserDaoInstance().MaxId()
+	//atomic.AddInt64(&userIdSequence, 1)
 	newUser := &dao.User{
-		Id:       userIdSequence,
+		//Id:       userIdSequence,
 		Name:     username,
 		Password: password,
 	}
