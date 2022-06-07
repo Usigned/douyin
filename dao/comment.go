@@ -51,10 +51,10 @@ func (d *CommentDao) QueryCommentById(id int64) ([]*Comment, error) {
 	return comments, nil
 }
 
-// 添加返回结果int64
+// QueryCommentByVideoId 添加返回结果int64
 func (d *CommentDao) QueryCommentByVideoId(videoID int64) (int64, []*Comment, error) {
 	var comments []*Comment
-	result := db.Debug().Where("video_id = ?", videoID).Order("id DESC").Find(&comments)
+	result := db.Where("video_id = ?", videoID).Order("id DESC").Find(&comments)
 	err := result.Error
 	if err != nil {
 		return 0, nil, err

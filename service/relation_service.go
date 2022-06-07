@@ -33,11 +33,11 @@ func (s *RelationService) Follow(userId, toUserId int64, token string) error {
 	return nil
 }
 
-// Follower 取关操作
-func (s *RelationService) Follower(userId, toUserId int64, token string) error {
+// WithdrawFollow 取关操作
+func (s *RelationService) WithdrawFollow(userId, toUserId int64, token string) error {
 	fmt.Println("当前用户：", userId)
 	fmt.Println("登录用户：", toUserId)
-	err := dao.NewRelationDaoInstance().FollowerAction(userId, toUserId)
+	err := dao.NewRelationDaoInstance().WithdrawFollowAction(userId, toUserId)
 	if err != nil {
 		return err
 	}

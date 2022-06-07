@@ -31,12 +31,13 @@ func NewFavoriteDaoInstance() *FavoriteDao {
 }
 
 func (d *FavoriteDao) QueryFavoriteByVideoId(videoID int64) (int64, error) {
-	result := db.Debug().Where("video_id = ?", videoID).Find(&Favorite{})
+	var favoriteCount int64
+	result := db.Table("videos").Select("favorite_count").Where("id = ?", videoID).Find(&favoriteCount)
 	err := result.Error
 	if err != nil {
 		return 0, err
 	}
-	return result.RowsAffected, nil
+	return favoriteCount, nil
 }
 
 func (d *FavoriteDao) QueryVideoIdByToken(token string) ([]int64, error) {

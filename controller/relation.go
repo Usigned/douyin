@@ -5,7 +5,6 @@ import (
 	"douyin/entity"
 	"douyin/service"
 	"douyin/utils"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -33,7 +32,7 @@ func RelationActionFunc(userId, token, toUserId, actionType string) UserListResp
 	if token == "" {
 		return ErrorRelationActionResponse(utils.Error{Msg: "empty token or user_id"})
 	}
-	//relationService.RelationAction()
+	// 用户不能关注自己
 	var uid int64
 	var err error
 	if userId == "" {
@@ -47,12 +46,17 @@ func RelationActionFunc(userId, token, toUserId, actionType string) UserListResp
 			return ErrorRelationActionResponse(err)
 		}
 	}
-	fmt.Println("userId", userId)
-	fmt.Println("toUserId", toUserId)
 	tUid, err := strconv.ParseInt(toUserId, 10, 64)
 	if err != nil {
 		return ErrorRelationActionResponse(err)
 	}
+
+	if uid == tUid {
+		return ErrorRelationActionResponse(utils.Error{
+			Msg: "自己不能关注自己！",
+		})
+	}
+
 	if actionType == "1" {
 		err = relationService.Follow(uid, tUid, token)
 		if err != nil {
@@ -65,7 +69,7 @@ func RelationActionFunc(userId, token, toUserId, actionType string) UserListResp
 			},
 		}
 	} else if actionType == "2" {
-		err = relationService.Follower(uid, tUid, token)
+		err = relationService.WithdrawFollow(uid, tUid, token)
 		if err != nil {
 			return ErrorRelationActionResponse(err)
 		}

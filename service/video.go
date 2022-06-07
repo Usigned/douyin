@@ -89,7 +89,6 @@ func (s *VideoService) FindVideoAfterTime(latestTime int64, token string, limit 
 			return nil, err
 		}
 		video.FavoriteCount = favoriteCount
-
 		video.IsFavorite = dao.NewFavoriteDaoInstance().QueryFavoriteByUserToken(video.Id, token)
 	}
 

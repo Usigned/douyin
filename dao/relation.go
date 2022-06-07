@@ -2,6 +2,7 @@ package dao
 
 import (
 	"douyin/entity"
+	"douyin/utils"
 	"fmt"
 	"gorm.io/gorm"
 	"sync"
@@ -37,7 +38,7 @@ func NewRelationDaoInstance() *RelationDao {
 func (s *RelationDao) QueryFollowList(id int64) ([]*User, error) {
 	var follows []Attention
 	err := db.Debug().Table("attention").Where("user_id", id).Find(&follows).Error
-	fmt.Println("粉丝列表", follows)
+	fmt.Println("关注列表", follows)
 	var users []*User
 	for _, follow := range follows {
 		var user *User
@@ -54,7 +55,7 @@ func (s *RelationDao) QueryFollowList(id int64) ([]*User, error) {
 func (s *RelationDao) QueryFollowerList(id int64) ([]*User, error) {
 	var follows []Attention
 	err := db.Debug().Table("attention").Where("to_user_id", id).Find(&follows).Error
-	fmt.Println("关注列表", follows)
+	fmt.Println("粉丝列表", follows)
 	var users []*User
 	for _, follow := range follows {
 		var user *User
@@ -68,9 +69,9 @@ func (s *RelationDao) QueryFollowerList(id int64) ([]*User, error) {
 }
 
 // IsFollow 判断是否关注
-func (s *RelationDao) IsFollow(userID int64, ToUserId int64) bool {
+func (s *RelationDao) IsFollow(userID int64, toUserId int64) bool {
 	var att Attention
-	if err := db.Debug().Table("attention").Select("*").Where("user_id = ? and to_user_id =?", userID, ToUserId).First(&att).Error; err != nil {
+	if err := db.Table("attention").Select("*").Where("user_id = ? and to_user_id =?", userID, toUserId).First(&att).Error; err != nil {
 		fmt.Println(err)
 	}
 	fmt.Println(att)
@@ -78,28 +79,35 @@ func (s *RelationDao) IsFollow(userID int64, ToUserId int64) bool {
 }
 
 // FollowAction 关注操作
-func (s *RelationDao) FollowAction(userId, ToUserId int64) error {
+func (s *RelationDao) FollowAction(userId, toUserId int64) error {
+	var att Attention
+	result := db.Where("user_id = ? And to_user_id = ?", userId, toUserId).Find(&att)
+	if result.RowsAffected != 0 {
+		return utils.Error{
+			Msg: "当前用户您已关注，无需重复关注! ",
+		}
+	}
 	//对关系表的操作
 	relation := Attention{
 		UserId:   userId,
-		ToUserId: ToUserId,
+		ToUserId: toUserId,
 		IsFollow: true,
 	}
 	db.Debug().Create(&relation)
 	//对用户表的操作
 	db.Debug().Where("id = ?", userId).First(&entity.User{}).Update("follow_count", gorm.Expr("follow_count + ?", 1))
-	db.Debug().Where("id = ?", ToUserId).First(&entity.User{}).Update("follower_count", gorm.Expr("follower_count + ?", 1))
+	db.Debug().Where("id = ?", toUserId).First(&entity.User{}).Update("follower_count", gorm.Expr("follower_count + ?", 1))
 	return nil
 }
 
-// FollowerAction 取关操作
-func (s *RelationDao) FollowerAction(userId, ToUserId int64) error {
+// WithdrawFollowAction 取关操作
+func (s *RelationDao) WithdrawFollowAction(userId, toUserId int64) error {
 	//对关系表的操作
-	if err := db.Debug().Where("user_id=? and to_user_id =?", userId, ToUserId).Delete(&Attention{}).Error; err != nil {
+	if err := db.Debug().Where("user_id=? and to_user_id =?", userId, toUserId).Delete(&Attention{}).Error; err != nil {
 		return err
 	}
 	//对用户表的操作
 	db.Debug().Where("id = ?", userId).First(&entity.User{}).Update("follow_count", gorm.Expr("follow_count - ?", 1))
-	db.Debug().Where("id = ?", ToUserId).First(&entity.User{}).Update("follower_count", gorm.Expr("follower_count - ?", 1))
+	db.Debug().Where("id = ?", toUserId).First(&entity.User{}).Update("follower_count", gorm.Expr("follower_count - ?", 1))
 	return nil
 }

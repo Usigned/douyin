@@ -18,7 +18,6 @@ func FollowList(c *gin.Context) {
 func FollowerList(c *gin.Context) {
 	c.JSON(http.StatusOK, FollowerListFunc(
 		c.Query("user_id"),
-		//c.Query("toUserId"),
 		c.Query("token"),
 	))
 }
