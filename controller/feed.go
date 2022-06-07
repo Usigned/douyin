@@ -1,10 +1,10 @@
 package controller
 
 import (
-	"github.com/Usigned/douyin/entity"
-	"github.com/Usigned/douyin/pack"
-	"github.com/Usigned/douyin/service"
-	"github.com/Usigned/douyin/utils"
+	"douyin/entity"
+	"douyin/pack"
+	"douyin/service"
+	"douyin/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"

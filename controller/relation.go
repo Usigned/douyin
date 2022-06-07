@@ -1,10 +1,17 @@
 package controller
 
 import (
-	"github.com/Usigned/douyin/entity"
+	"douyin/dao"
+	"douyin/entity"
+	"douyin/service"
+	"douyin/utils"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 )
+
+var relationService = service.NewRelationServiceInstance()
 
 type UserListResponse struct {
 	entity.Response
@@ -13,31 +20,77 @@ type UserListResponse struct {
 
 // RelationAction no practical effect, just check if token is valid
 func RelationAction(c *gin.Context) {
-	token := c.Query("token")
+	c.JSON(http.StatusOK, RelationActionFunc(
+		c.Query("user_id"),
+		c.Query("token"),
+		c.Query("to_user_id"),
+		c.Query("action_type"),
+	))
+}
 
-	if _, exist := usersLoginInfo[token]; exist {
-		c.JSON(http.StatusOK, entity.Response{StatusCode: 0})
+func RelationActionFunc(userId, token, toUserId, actionType string) UserListResponse {
+	// TODO 使用token进行鉴权
+	if token == "" {
+		return ErrorRelationActionResponse(utils.Error{Msg: "empty token or user_id"})
+	}
+	//relationService.RelationAction()
+	var uid int64
+	var err error
+	if userId == "" {
+		uid, err = dao.NewLoginStatusDaoInstance().QueryUserIdByToken(token)
+		if err != nil {
+			return ErrorRelationActionResponse(err)
+		}
 	} else {
-		c.JSON(http.StatusOK, entity.Response{StatusCode: 1, StatusMsg: "User doesn't exist"})
+		uid, err = strconv.ParseInt(userId, 10, 64)
+		if err != nil {
+			return ErrorRelationActionResponse(err)
+		}
+	}
+	fmt.Println("userId", userId)
+	fmt.Println("toUserId", toUserId)
+	tUid, err := strconv.ParseInt(toUserId, 10, 64)
+	if err != nil {
+		return ErrorRelationActionResponse(err)
+	}
+	if actionType == "1" {
+		err = relationService.Follow(uid, tUid, token)
+		if err != nil {
+			return ErrorRelationActionResponse(err)
+		}
+		return UserListResponse{
+			Response: entity.Response{
+				StatusCode: 0,
+				StatusMsg:  "",
+			},
+		}
+	} else if actionType == "2" {
+		err = relationService.Follower(uid, tUid, token)
+		if err != nil {
+			return ErrorRelationActionResponse(err)
+		}
+		return UserListResponse{
+			Response: entity.Response{
+				StatusCode: 0,
+				StatusMsg:  "",
+			},
+		}
+	} else {
+		return UserListResponse{
+			Response: entity.Response{
+				StatusCode: 1,
+				StatusMsg:  "Service Wrong!",
+			},
+		}
 	}
 }
 
-// FollowList all users have same follow list
-func FollowList(c *gin.Context) {
-	c.JSON(http.StatusOK, UserListResponse{
+func ErrorRelationActionResponse(err error) UserListResponse {
+	return UserListResponse{
 		Response: entity.Response{
-			StatusCode: 0,
+			StatusCode: -1,
+			StatusMsg:  err.Error(),
 		},
-		UserList: []entity.User{DemoUser},
-	})
-}
-
-// FollowerList all users have same follower list
-func FollowerList(c *gin.Context) {
-	c.JSON(http.StatusOK, UserListResponse{
-		Response: entity.Response{
-			StatusCode: 0,
-		},
-		UserList: []entity.User{DemoUser},
-	})
+		UserList: nil,
+	}
 }

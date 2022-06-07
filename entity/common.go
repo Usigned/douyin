@@ -30,3 +30,7 @@ type User struct {
 	FollowerCount int64  `json:"follower_count"`
 	IsFollow      bool   `json:"is_follow,omitempty"`
 }
+
+func (v User) TableName() string {
+	return "users"
+}

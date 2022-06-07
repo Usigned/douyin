@@ -1,15 +1,18 @@
 package controller
 
 import (
+	"douyin/entity"
+	"douyin/service"
+	"douyin/utils"
 	"fmt"
-	"github.com/Usigned/douyin/entity"
-	"github.com/Usigned/douyin/service"
-	"github.com/Usigned/douyin/utils"
 	"github.com/gin-gonic/gin"
+
 	"mime/multipart"
 	"net/http"
 	"path/filepath"
 )
+
+//var usersLoginInfo = service.CopyULI()
 
 // Publish check token then save upload file to public directory TODO
 func Publish(c *gin.Context) {

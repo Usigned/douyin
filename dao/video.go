@@ -72,3 +72,11 @@ func (*VideoDao) QueryVideoByAuthorId(authorId int64) ([]*Video, error) {
 	}
 	return videos, nil
 }
+
+func (*VideoDao) UpdateCommentByID(id int64, count int64) error {
+	err := db.Model(&Video{}).Where("id = ?", id).UpdateColumn("comment_count", count).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}

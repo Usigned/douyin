@@ -1,15 +1,14 @@
 package controller
 
 import (
-	"github.com/Usigned/douyin/entity"
+	"douyin/entity"
+	"douyin/service"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 )
 
-type CommentListResponse struct {
-	entity.Response
-	CommentList []entity.Comment `json:"comment_list,omitempty"`
-}
+var commentService = service.NewCommentServiceInstance()
 
 type CommentActionResponse struct {
 	entity.Response
@@ -18,31 +17,80 @@ type CommentActionResponse struct {
 
 // CommentAction no practical effect, just check if token is valid
 func CommentAction(c *gin.Context) {
-	token := c.Query("token")
-	actionType := c.Query("action_type")
+	c.JSON(http.StatusOK, CommentActionFunc(
+		c.Query("video_id"),
+		c.Query("token"),
+		c.Query("action_type"),
+		c.Query("comment_id"),
+		c.Query("comment_text"),
+	))
+}
 
-	if user, exist := usersLoginInfo[token]; exist {
-		if actionType == "1" {
-			text := c.Query("comment_text")
-			c.JSON(http.StatusOK, CommentActionResponse{Response: entity.Response{StatusCode: 0},
-				Comment: entity.Comment{
-					Id:         1,
-					User:       user,
-					Content:    text,
-					CreateDate: "05-01",
-				}})
-			return
+func CommentActionFunc(videoId, token, actionType, commentId, text string) CommentActionResponse {
+	vid, err := strconv.ParseInt(videoId, 10, 64)
+	if err != nil {
+		return ErrorCommentResponse(err)
+	}
+	if actionType == "1" {
+		comment, err := commentService.Add(vid, token, text)
+		if err != nil {
+			return ErrorCommentResponse(err)
 		}
-		c.JSON(http.StatusOK, entity.Response{StatusCode: 0})
+		if comment == nil {
+			return FailCommentResponse("Comments are not allowed to be empty! ")
+		}
+		return CommentActionResponse{
+			Response: entity.Response{
+				StatusCode: 0,
+				StatusMsg:  "Add comment success! ",
+			},
+			Comment: *comment,
+		}
+	} else if actionType == "2" {
+		cid, err := strconv.ParseInt(commentId, 10, 64)
+		if err != nil {
+			return ErrorCommentResponse(err)
+		}
+		comment, err := commentService.Withdraw(cid)
+		if err != nil {
+			return ErrorCommentResponse(err)
+		}
+		if comment == nil {
+			return FailCommentResponse("Withdraw failed, Please try again later! ")
+		}
+		return CommentActionResponse{
+			Response: entity.Response{
+				StatusCode: 0,
+				StatusMsg:  "Withdraw comment success! ",
+			},
+			Comment: *comment,
+		}
 	} else {
-		c.JSON(http.StatusOK, entity.Response{StatusCode: 1, StatusMsg: "User doesn't exist"})
+		return CommentActionResponse{
+			Response: entity.Response{
+				StatusCode: 1,
+				StatusMsg:  "Service Wrong!",
+			},
+		}
 	}
 }
 
-// CommentList all videos have same demo comment list
-func CommentList(c *gin.Context) {
-	c.JSON(http.StatusOK, CommentListResponse{
-		Response:    entity.Response{StatusCode: 0},
-		CommentList: DemoComments,
-	})
+// ErrorCommentResponse 评论操作错误
+func ErrorCommentResponse(err error) CommentActionResponse {
+	return CommentActionResponse{
+		Response: entity.Response{
+			StatusCode: 1,
+			StatusMsg:  err.Error(),
+		},
+	}
+}
+
+// FailCommentResponse 评论操作失败
+func FailCommentResponse(msg string) CommentActionResponse {
+	return CommentActionResponse{
+		Response: entity.Response{
+			StatusCode: -1,
+			StatusMsg:  msg,
+		},
+	}
 }

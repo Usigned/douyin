@@ -1,12 +1,10 @@
 package service
 
 import (
-	"fmt"
-	"github.com/Usigned/douyin/dao"
-	"github.com/Usigned/douyin/entity"
-	"github.com/Usigned/douyin/pack"
-	"github.com/Usigned/douyin/utils"
-	"strconv"
+	"douyin/dao"
+	"douyin/entity"
+	"douyin/pack"
+	"douyin/utils"
 	"sync"
 	"time"
 )
@@ -61,7 +59,7 @@ func (s *VideoService) FindVideoAfterTime(latestTime int64, limit int) (*int64, 
 	} else {
 		t = time.UnixMilli(latestTime)
 	}
-	fmt.Printf("latestTime: %#v\n", t)
+
 	videoModels, err := dao.NewVideoDaoInstance().QueryVideoBeforeTime(t, limit)
 	if err != nil {
 		return nil, nil, err
@@ -79,6 +77,20 @@ func (s *VideoService) FindVideoAfterTime(latestTime int64, limit int) (*int64, 
 
 	for i, video := range videos {
 		video.Author = userMap[authorIds[i]]
+
+		commentCount, _, err := dao.NewCommentDaoInstance().QueryCommentByVideoId(video.Id)
+		if err != nil {
+			return nil, err
+		}
+		video.CommentCount = commentCount
+
+		favoriteCount, err := dao.NewFavoriteDaoInstance().QueryFavoriteByVideoId(video.Id)
+		if err != nil {
+			return nil, err
+		}
+		video.FavoriteCount = favoriteCount
+
+		video.IsFavorite = dao.NewFavoriteDaoInstance().QueryFavoriteByUserToken(video.Id, token)
 	}
 
 	var nextTime int64
@@ -135,13 +147,13 @@ func (s VideoService) Publish(token, playUrl, coverUrl, title string) error {
 	if err != nil {
 		return err
 	}
-	if userId == nil {
+	if userId == -1 {
 		return utils.Error{Msg: "user not exist"}
 	}
 
 	// 保存 video
 	videoModel := dao.Video{
-		AuthorId:      *userId,
+		AuthorId:      userId,
 		PlayUrl:       playUrl,
 		CoverUrl:      coverUrl,
 		Title:         title,
@@ -154,7 +166,7 @@ func (s VideoService) Publish(token, playUrl, coverUrl, title string) error {
 		return err
 	}
 	// 用户的视频数增加
-	err = dao.NewUserDaoInstance().IncreaseVideoCountByOne(*userId)
+	err = dao.NewUserDaoInstance().IncreaseVideoCountByOne(userId)
 	if err != nil {
 		return err
 	}
