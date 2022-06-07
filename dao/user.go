@@ -139,7 +139,6 @@ func (*UserDao) MaxId() (int64, error) {
 	result := db.Table("users").Last(&lastRec)
 	err := result.Error
 	if err != nil {
-		log.Fatal("max id err:" + err.Error())
 		return 0, err
 	}
 	return lastRec.Id, nil

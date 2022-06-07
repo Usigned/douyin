@@ -56,15 +56,6 @@ func (s *UserService) FindUserByToken(token string) (*entity.User, error) {
 	return pack.User(user), nil
 }
 
-// MFindUserById return empty map if no user is found
-func (s *UserService) MFindUserById(ids []int64) (map[int64]entity.User, error) {
-	userModels, err := dao.NewUserDaoInstance().MQueryUserById(ids)
-	if err != nil {
-		return nil, err
-	}
-	return pack.MUser(userModels), nil
-}
-
 // FindTokenByUserName 根据用户名查找token，如果用户不存在则抛出异常，如果用户存在,token不存在则创建新token
 func (s *UserService) FindTokenByUserName(name string) (*string, error) {
 	// 查询用户是否存在

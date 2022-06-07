@@ -74,10 +74,23 @@ func (s *VideoService) FindVideoAfterTime(latestTime int64, token string, limit 
 	}
 
 	userMap := pack.MUser(userModelMap)
+
+	// 获取当前用户
+	curUserId, err := dao.NewLoginStatusDaoInstance().QueryUserIdByToken(token)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if curUserId != -1 {
+		for uid := range userMap {
+			userMap[uid].IsFollow = dao.NewRelationDaoInstance().IsFollow(curUserId, uid)
+		}
+	}
+
 	videos := pack.Videos(videoModels)
 
 	for i, video := range videos {
-		video.Author = userMap[authorIds[i]]
+		video.Author = *userMap[authorIds[i]]
 
 		commentCount, _, err := dao.NewCommentDaoInstance().QueryCommentByVideoId(video.Id)
 		if err != nil {
@@ -132,7 +145,7 @@ func (s *VideoService) FindVideoByAuthorId(authorId int64) ([]*entity.Video, err
 	videos := pack.Videos(videoModels)
 
 	for i, video := range videos {
-		video.Author = userMap[authorIds[i]]
+		video.Author = *userMap[authorIds[i]]
 	}
 
 	return videos, nil

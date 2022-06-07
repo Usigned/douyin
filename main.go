@@ -1,7 +1,7 @@
 package main
 
 import (
-	dao "douyin/dao"
+	"douyin/dao"
 	"github.com/gin-gonic/gin"
 )
 
