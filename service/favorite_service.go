@@ -2,7 +2,7 @@ package service
 
 // TODO
 import (
-	"douyin/dao"
+	"douyin/dao/mysql"
 	"douyin/entity"
 	"douyin/pack"
 	"douyin/utils"
@@ -26,7 +26,7 @@ func NewFavoriteServiceInstance() *FavoriteService {
 }
 
 func (s *FavoriteService) FindUserByToken(token string) (*entity.User, error) {
-	user, err := dao.NewUserDaoInstance().QueryUserByToken(token)
+	user, err := mysql.NewUserDaoInstance().QueryUserByToken(token)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func (s *FavoriteService) FindVideosByToken(token string) ([]*entity.Video, erro
 	if token == "" {
 		return nil, nil
 	}
-	videoIds, err := dao.NewFavoriteDaoInstance().QueryVideoIdByToken(token)
+	videoIds, err := mysql.NewFavoriteDaoInstance().QueryVideoIdByToken(token)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func (s *FavoriteService) FindVideosByToken(token string) ([]*entity.Video, erro
 }
 
 func (s *FavoriteService) TotalComment() (int64, error) {
-	count, err := dao.NewFavoriteDaoInstance().Total()
+	count, err := mysql.NewFavoriteDaoInstance().Total()
 	if err != nil {
 		return -1, err
 	}
@@ -60,7 +60,7 @@ func (s *FavoriteService) TotalComment() (int64, error) {
 }
 
 func (s *FavoriteService) LastId() (int64, error) {
-	count, err := dao.NewFavoriteDaoInstance().MaxId()
+	count, err := mysql.NewFavoriteDaoInstance().MaxId()
 	if err != nil {
 		return count, err
 	}
@@ -70,7 +70,7 @@ func (s *FavoriteService) LastId() (int64, error) {
 func (s *FavoriteService) Add(videoId int64, token string) error {
 	// 先查缓存 ..
 	if _, exist := usersLoginInfo[token]; !exist {
-		user, _ := dao.NewUserDaoInstance().QueryUserByToken(token)
+		user, _ := mysql.NewUserDaoInstance().QueryUserByToken(token)
 		if user == nil {
 			return utils.Error{Msg: "User doesn't exist, Please Register! "}
 		}
@@ -79,13 +79,13 @@ func (s *FavoriteService) Add(videoId int64, token string) error {
 	// 点赞
 	favoriteIdSequence, _ := favoriteService.LastId()
 	atomic.AddInt64(&favoriteIdSequence, 1)
-	newFavorite := &dao.Favorite{
+	newFavorite := &mysql.Favorite{
 		Id:        favoriteIdSequence,
 		UserToken: token,
 		VideoId:   videoId,
 		CreateAt:  time.Now(),
 	}
-	err := dao.NewFavoriteDaoInstance().Save(newFavorite)
+	err := mysql.NewFavoriteDaoInstance().Save(newFavorite)
 	if err != nil {
 		return err
 	}
@@ -94,7 +94,7 @@ func (s *FavoriteService) Add(videoId int64, token string) error {
 
 func (s *FavoriteService) Withdraw(videoId int64, token string) error {
 	// 删除评论
-	err := dao.NewFavoriteDaoInstance().Delete(videoId, token)
+	err := mysql.NewFavoriteDaoInstance().Delete(videoId, token)
 	if err != nil {
 		return err
 	}

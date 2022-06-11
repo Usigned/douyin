@@ -1,7 +1,7 @@
 package service
 
 import (
-	"douyin/dao"
+	"douyin/dao/mysql"
 	"douyin/entity"
 	"douyin/pack"
 	"douyin/utils"
@@ -25,7 +25,7 @@ func NewVideoServiceInstance() *VideoService {
 }
 
 func (s *VideoService) FindVideoById(id int64) (*entity.Video, error) {
-	videoModel, err := dao.NewVideoDaoInstance().QueryVideoById(id)
+	videoModel, err := mysql.NewVideoDaoInstance().QueryVideoById(id)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +34,7 @@ func (s *VideoService) FindVideoById(id int64) (*entity.Video, error) {
 		return nil, nil
 	}
 
-	userModel, err := dao.NewUserDaoInstance().QueryUserById(videoModel.AuthorId)
+	userModel, err := mysql.NewUserDaoInstance().QueryUserById(videoModel.AuthorId)
 	if err != nil {
 		return nil, err
 	}
@@ -54,14 +54,14 @@ func (s *VideoService) Feed(latestTime int64, token string, limit int) (*int64, 
 		t = time.UnixMilli(latestTime)
 	}
 
-	videoModels, err := dao.NewVideoDaoInstance().QueryVideoBeforeTime(t, limit)
+	videoModels, err := mysql.NewVideoDaoInstance().QueryVideoBeforeTime(t, limit)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	authorIds := pack.AuthorIds(videoModels)
 
-	userModelMap, err := dao.NewUserDaoInstance().MQueryUserById(authorIds)
+	userModelMap, err := mysql.NewUserDaoInstance().MQueryUserById(authorIds)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -69,14 +69,14 @@ func (s *VideoService) Feed(latestTime int64, token string, limit int) (*int64, 
 	userMap := pack.MUser(userModelMap)
 
 	// 获取当前用户
-	curUserId, err := dao.NewLoginStatusDaoInstance().QueryUserIdByToken(token)
+	curUserId, err := mysql.NewLoginStatusDaoInstance().QueryUserIdByToken(token)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	if curUserId != -1 {
 		for uid := range userMap {
-			userMap[uid].IsFollow = dao.NewRelationDaoInstance().IsFollow(curUserId, uid)
+			userMap[uid].IsFollow = mysql.NewRelationDaoInstance().IsFollow(curUserId, uid)
 		}
 	}
 
@@ -85,18 +85,18 @@ func (s *VideoService) Feed(latestTime int64, token string, limit int) (*int64, 
 	for i, video := range videos {
 		video.Author = *userMap[authorIds[i]]
 
-		commentCount, _, err := dao.NewCommentDaoInstance().QueryCommentByVideoId(video.Id)
+		commentCount, _, err := mysql.NewCommentDaoInstance().QueryCommentByVideoId(video.Id)
 		if err != nil {
 			return nil, nil, err
 		}
 		video.CommentCount = commentCount
 
-		favoriteCount, err := dao.NewFavoriteDaoInstance().QueryFavoriteByVideoId(video.Id)
+		favoriteCount, err := mysql.NewFavoriteDaoInstance().QueryFavoriteByVideoId(video.Id)
 		if err != nil {
 			return nil, nil, err
 		}
 		video.FavoriteCount = favoriteCount
-		video.IsFavorite = dao.NewFavoriteDaoInstance().QueryFavoriteByUserToken(video.Id, token)
+		video.IsFavorite = mysql.NewFavoriteDaoInstance().QueryFavoriteByUserToken(video.Id, token)
 	}
 
 	var nextTime int64
@@ -117,13 +117,13 @@ func (s *VideoService) PublishList(authorId int64) ([]*entity.Video, error) {
 		return nil, nil
 	}
 
-	videoModels, err := dao.NewVideoDaoInstance().QueryVideoByAuthorId(authorId)
+	videoModels, err := mysql.NewVideoDaoInstance().QueryVideoByAuthorId(authorId)
 	if err != nil {
 		return nil, err
 	}
 	authorIds := pack.AuthorIds(videoModels)
 
-	userModelMap, err := dao.NewUserDaoInstance().MQueryUserById(authorIds)
+	userModelMap, err := mysql.NewUserDaoInstance().MQueryUserById(authorIds)
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +143,7 @@ func (s VideoService) Publish(token, playUrl, coverUrl, title string) error {
 		return utils.Error{Msg: "参数不能为空"}
 	}
 	// 查询用户
-	userId, err := dao.NewLoginStatusDaoInstance().QueryUserIdByToken(token)
+	userId, err := mysql.NewLoginStatusDaoInstance().QueryUserIdByToken(token)
 	if err != nil {
 		return err
 	}
@@ -152,7 +152,7 @@ func (s VideoService) Publish(token, playUrl, coverUrl, title string) error {
 	}
 
 	// 保存 video
-	videoModel := dao.Video{
+	videoModel := mysql.Video{
 		AuthorId:      userId,
 		PlayUrl:       playUrl,
 		CoverUrl:      coverUrl,
@@ -161,12 +161,12 @@ func (s VideoService) Publish(token, playUrl, coverUrl, title string) error {
 		FavoriteCount: 0,
 		CommentCount:  0,
 	}
-	err = dao.NewVideoDaoInstance().CreateVideo(&videoModel)
+	err = mysql.NewVideoDaoInstance().CreateVideo(&videoModel)
 	if err != nil {
 		return err
 	}
 	// 用户的视频数增加
-	err = dao.NewUserDaoInstance().IncreaseVideoCountByOne(userId)
+	err = mysql.NewUserDaoInstance().IncreaseVideoCountByOne(userId)
 	if err != nil {
 		return err
 	}

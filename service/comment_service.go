@@ -2,7 +2,7 @@ package service
 
 // TODO
 import (
-	"douyin/dao"
+	"douyin/dao/mysql"
 	"douyin/entity"
 	"douyin/pack"
 	"douyin/utils"
@@ -32,7 +32,7 @@ func (s *CommentService) LoadComments(videoId int64) ([]*entity.Comment, error) 
 
 func (s *CommentService) FindCommentByName(name string) (*entity.Comment, error) {
 	// 查询用户信息
-	commentModel, err := dao.NewCommentDaoInstance().QueryCommentByName(name)
+	commentModel, err := mysql.NewCommentDaoInstance().QueryCommentByName(name)
 	if err != nil {
 		return nil, err
 	}
@@ -47,11 +47,11 @@ func (s *CommentService) FindCommentByVideoId(videoID int64) ([]*entity.Comment,
 		return nil, nil
 	}
 
-	_, commentModels, err := dao.NewCommentDaoInstance().QueryCommentByVideoId(videoID)
+	_, commentModels, err := mysql.NewCommentDaoInstance().QueryCommentByVideoId(videoID)
 	userNames := pack.UserNames(commentModels)
 	fmt.Println(userNames)
 
-	userModelMap, err := dao.NewUserDaoInstance().MQueryUserByName(userNames)
+	userModelMap, err := mysql.NewUserDaoInstance().MQueryUserByName(userNames)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func (s *CommentService) FindCommentByVideoId(videoID int64) ([]*entity.Comment,
 }
 
 func (s *CommentService) TotalComment() (int64, error) {
-	count, err := dao.NewCommentDaoInstance().Total()
+	count, err := mysql.NewCommentDaoInstance().Total()
 	if err != nil {
 		return -1, err
 	}
@@ -74,7 +74,7 @@ func (s *CommentService) TotalComment() (int64, error) {
 }
 
 func (s *CommentService) LastId() (int64, error) {
-	count, err := dao.NewCommentDaoInstance().MaxId()
+	count, err := mysql.NewCommentDaoInstance().MaxId()
 	if err != nil {
 		return count, err
 	}
@@ -84,7 +84,7 @@ func (s *CommentService) LastId() (int64, error) {
 func (s *CommentService) Add(videoId int64, token, text string) (*entity.Comment, error) {
 	// 先查缓存 ..
 	if _, exist := usersLoginInfo[token]; !exist {
-		user, _ := dao.NewUserDaoInstance().QueryUserByToken(token)
+		user, _ := mysql.NewUserDaoInstance().QueryUserByToken(token)
 		if user == nil {
 			return nil, utils.Error{Msg: "User doesn't exist, Please Register! "}
 		}
@@ -93,7 +93,7 @@ func (s *CommentService) Add(videoId int64, token, text string) (*entity.Comment
 	// 评论
 	commentIdSequence, _ := commentService.LastId()
 	atomic.AddInt64(&commentIdSequence, 1)
-	newComment := &dao.Comment{
+	newComment := &mysql.Comment{
 		Id:       commentIdSequence,
 		VideoId:  videoId,
 		UserName: usersLoginInfo[token].Name,
@@ -101,7 +101,7 @@ func (s *CommentService) Add(videoId int64, token, text string) (*entity.Comment
 		CreateAt: time.Now().Format("01-02"),
 	}
 	fmt.Println(newComment)
-	comment, err := dao.NewCommentDaoInstance().Save(newComment)
+	comment, err := mysql.NewCommentDaoInstance().Save(newComment)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +110,7 @@ func (s *CommentService) Add(videoId int64, token, text string) (*entity.Comment
 
 func (s *CommentService) Withdraw(videoId int64) (*entity.Comment, error) {
 	// 删除评论
-	oldComment, err := dao.NewCommentDaoInstance().DeleteById(videoId)
+	oldComment, err := mysql.NewCommentDaoInstance().DeleteById(videoId)
 	if err != nil {
 		return nil, err
 	}

@@ -1,12 +1,12 @@
 package pack
 
 import (
-	"douyin/dao"
+	"douyin/dao/mysql"
 	"douyin/entity"
 )
 
 // User if param is nil then return nil
-func User(userModel *dao.User) *entity.User {
+func User(userModel *mysql.User) *entity.User {
 	if userModel != nil {
 		return &entity.User{
 			Id:            userModel.Id,
@@ -18,7 +18,7 @@ func User(userModel *dao.User) *entity.User {
 	return nil
 }
 
-func Users(userModels []*dao.User) []*entity.User {
+func Users(userModels []*mysql.User) []*entity.User {
 	if userModels != nil {
 		var users = make([]*entity.User, 0, len(userModels))
 		for _, model := range userModels {
@@ -30,7 +30,7 @@ func Users(userModels []*dao.User) []*entity.User {
 }
 
 // MUser if param is nil then return empty map
-func MUser(userModels map[int64]dao.User) map[int64]*entity.User {
+func MUser(userModels map[int64]mysql.User) map[int64]*entity.User {
 	if userModels != nil {
 		var users = make(map[int64]*entity.User, len(userModels))
 		for id, userModel := range userModels {
@@ -41,7 +41,7 @@ func MUser(userModels map[int64]dao.User) map[int64]*entity.User {
 	return nil
 }
 
-func MUserByName(userModels map[string]dao.User) map[string]entity.User {
+func MUserByName(userModels map[string]mysql.User) map[string]entity.User {
 	if userModels != nil {
 		var users = make(map[string]entity.User, len(userModels))
 		for name, userModel := range userModels {

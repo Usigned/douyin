@@ -4,11 +4,11 @@ package pack
 // TODO
 
 import (
-	"douyin/dao"
+	"douyin/dao/mysql"
 	"douyin/entity"
 )
 
-func UserNames(commentModels []*dao.Comment) []string {
+func UserNames(commentModels []*mysql.Comment) []string {
 	if commentModels != nil {
 		var ids = make([]string, 0, len(commentModels))
 		for _, commentModel := range commentModels {
@@ -19,7 +19,7 @@ func UserNames(commentModels []*dao.Comment) []string {
 	return []string{}
 }
 
-func Comment(commentModel *dao.Comment) *entity.Comment {
+func Comment(commentModel *mysql.Comment) *entity.Comment {
 	if commentModel != nil {
 		return &entity.Comment{
 			Id: commentModel.Id,
@@ -34,7 +34,7 @@ func Comment(commentModel *dao.Comment) *entity.Comment {
 	return nil
 }
 
-func Comments(commentModels []*dao.Comment) []*entity.Comment {
+func Comments(commentModels []*mysql.Comment) []*entity.Comment {
 	if commentModels != nil {
 		var comments = make([]*entity.Comment, 0, len(commentModels))
 		for _, model := range commentModels {

@@ -1,4 +1,4 @@
-package dao
+package mysql
 
 import (
 	"gorm.io/gorm"

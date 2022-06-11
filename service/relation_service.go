@@ -1,7 +1,7 @@
 package service
 
 import (
-	"douyin/dao"
+	"douyin/dao/mysql"
 	"douyin/entity"
 	"douyin/pack"
 	"fmt"
@@ -26,7 +26,7 @@ func NewRelationServiceInstance() *RelationService {
 func (s *RelationService) Follow(userId, toUserId int64, token string) error {
 	fmt.Println("当前用户：", userId)
 	fmt.Println("登录用户：", toUserId)
-	err := dao.NewRelationDaoInstance().FollowAction(userId, toUserId)
+	err := mysql.NewRelationDaoInstance().FollowAction(userId, toUserId)
 	if err != nil {
 		return err
 	}
@@ -37,7 +37,7 @@ func (s *RelationService) Follow(userId, toUserId int64, token string) error {
 func (s *RelationService) WithdrawFollow(userId, toUserId int64, token string) error {
 	fmt.Println("当前用户：", userId)
 	fmt.Println("登录用户：", toUserId)
-	err := dao.NewRelationDaoInstance().WithdrawFollowAction(userId, toUserId)
+	err := mysql.NewRelationDaoInstance().WithdrawFollowAction(userId, toUserId)
 	if err != nil {
 		return err
 	}
@@ -48,14 +48,14 @@ func (s *RelationService) WithdrawFollow(userId, toUserId int64, token string) e
 func (s *RelationService) FollowList(userId int64, token string) ([]*entity.User, error) {
 	// 当前用户id : userId
 	// 登录用户id : toUserId
-	toUserId, err := dao.NewLoginStatusDaoInstance().QueryUserIdByToken(token)
-	userListModels, err := dao.NewRelationDaoInstance().QueryFollowList(userId)
+	toUserId, err := mysql.NewLoginStatusDaoInstance().QueryUserIdByToken(token)
+	userListModels, err := mysql.NewRelationDaoInstance().QueryFollowList(userId)
 	if err != nil {
 		return nil, err
 	}
 	users := pack.Users(userListModels)
 	for _, user := range users {
-		user.IsFollow = dao.NewRelationDaoInstance().IsFollow(toUserId, user.Id)
+		user.IsFollow = mysql.NewRelationDaoInstance().IsFollow(toUserId, user.Id)
 	}
 	return users, nil
 }
@@ -64,14 +64,14 @@ func (s *RelationService) FollowList(userId int64, token string) ([]*entity.User
 func (s *RelationService) FollowerList(userId int64, token string) ([]*entity.User, error) {
 	// 当前用户id : userId
 	// 登录用户id : toUserId
-	toUserId, err := dao.NewLoginStatusDaoInstance().QueryUserIdByToken(token)
-	userListModels, err := dao.NewRelationDaoInstance().QueryFollowerList(userId)
+	toUserId, err := mysql.NewLoginStatusDaoInstance().QueryUserIdByToken(token)
+	userListModels, err := mysql.NewRelationDaoInstance().QueryFollowerList(userId)
 	if err != nil {
 		return nil, err
 	}
 	users := pack.Users(userListModels)
 	for _, user := range users {
-		user.IsFollow = dao.NewRelationDaoInstance().IsFollow(toUserId, user.Id)
+		user.IsFollow = mysql.NewRelationDaoInstance().IsFollow(toUserId, user.Id)
 	}
 	return users, nil
 }

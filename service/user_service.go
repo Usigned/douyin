@@ -2,11 +2,12 @@ package service
 
 // TODO
 import (
-	"douyin/dao"
+	"douyin/dao/mysql"
 	"douyin/entity"
 	"douyin/pack"
 	"douyin/utils"
 	"errors"
+	"fmt"
 	"strings"
 	"sync"
 )
@@ -16,7 +17,7 @@ type UserService struct {
 
 var userService *UserService
 var userOnce sync.Once
-var usersLoginInfo = dao.CopyULI()
+var usersLoginInfo = mysql.CopyULI()
 
 func NewUserServiceInstance() *UserService {
 	userOnce.Do(
@@ -28,7 +29,7 @@ func NewUserServiceInstance() *UserService {
 
 func (s *UserService) UserInfo(id int64) (*entity.User, error) {
 	// 查询用户信息
-	userModel, err := dao.NewUserDaoInstance().QueryUserById(id)
+	userModel, err := mysql.NewUserDaoInstance().QueryUserById(id)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +41,7 @@ func (s *UserService) UserInfo(id int64) (*entity.User, error) {
 }
 
 func (s *UserService) FindUserByName(name string) (*entity.User, error) {
-	user, err := dao.NewUserDaoInstance().QueryUserByName(name)
+	user, err := mysql.NewUserDaoInstance().QueryUserByName(name)
 	if err != nil || user == nil {
 		return nil, err
 	}
@@ -48,34 +49,35 @@ func (s *UserService) FindUserByName(name string) (*entity.User, error) {
 }
 
 // AddUser 创建用户和token
-func (s *UserService) AddUser(username, password string) error {
-	oldUser, _ := dao.NewUserDaoInstance().QueryUserByName(username)
-	if oldUser != nil {
-		return utils.Error{Msg: "User already exists, please do not register again! "}
+func (s *UserService) AddUser(token string) error {
+	fmt.Println("token:", token)
+	parseToken, err := utils.ParseToken(token)
+
+	if err != nil {
+		return utils.Error{Msg: "invalid token"}
 	}
-	// 用户注册
-	password = utils.Md5(password)
-	token := "<" + username + "><" + password + ">"
-	//userIdSequence, _ := dao.NewUserDaoInstance().MaxId()
-	//atomic.AddInt64(&userIdSequence, 1)
-	newUser := &dao.User{
-		//Id:       userIdSequence,
-		Name:     username,
-		Password: password,
+	//maxId, _ := dao.NewUserDaoInstance().MaxId()
+	//fmt.Println("maxId:", maxId)
+	//userIdSequence := atomic.AddInt64(&maxId, 1)
+	fmt.Println("666")
+	newUser := &mysql.User{
+		//Id: userIdSequence,
+		Name:     parseToken.Username,
+		Password: parseToken.Password,
 	}
-	err := dao.NewUserDaoInstance().CreateUser(newUser)
+	fmt.Println("newUser:", newUser)
+	err = mysql.NewUserDaoInstance().CreateUser(newUser)
 	if err != nil {
 		return err
 	}
 
 	// 创建token
-	loginStatus := &dao.LoginStatus{
+	loginStatus := &mysql.LoginStatus{
 		UserId: newUser.Id,
 		Token:  token,
-		//Token:  utils.GenerateUUID(),
 	}
 	usersLoginInfo[loginStatus.Token] = *pack.User(newUser)
-	err = dao.NewLoginStatusDaoInstance().CreateLoginStatus(loginStatus)
+	err = mysql.NewLoginStatusDaoInstance().CreateLoginStatus(loginStatus)
 	if err != nil {
 		return err
 	}
@@ -88,11 +90,12 @@ func (s *UserService) Register(username, password string) error {
 	if err != nil {
 		return err
 	}
-	token := "<" + username + "><" + password + ">"
+	//password = utils.Md5(password)
+	token, _ := utils.GenToken(username, utils.Md5(password))
 	// 先查缓存 ..
 	if _, exist := usersLoginInfo[token]; !exist {
 		if user, _ := userService.FindUserByName(username); user == nil {
-			err = s.AddUser(username, password)
+			err = s.AddUser(token)
 			if err != nil {
 				return utils.Error{Msg: "User register failed, Please retry for a minute!"}
 			}
@@ -104,26 +107,28 @@ func (s *UserService) Register(username, password string) error {
 
 func (s *UserService) Login(username, password string) (*int64, *string, error) {
 	// 用户校验
-	password = utils.Md5(password)
-	token := "<" + username + "><" + password + ">"
-
 	user, _ := s.FindUserByName(username)
 	if user == nil {
 		return nil, nil, utils.Error{Msg: "User doesn't exist, Please Register! "}
 	}
+
+	// 生成JWT Token
+	//password = utils.Md5(password)
+	token, _ := utils.GenToken(username, utils.Md5(password))
+
 	usersLoginInfo[token] = *user
 	// 密码校验
-	result, _ := dao.NewUserDaoInstance().QueryUserByToken(token)
+	result, _ := mysql.NewUserDaoInstance().QueryUserByToken(token)
 	if result == nil {
 		return nil, nil, utils.Error{Msg: "Password Wrong!"}
 	}
 	// 创建token
-	loginStatus := &dao.LoginStatus{
+	loginStatus := &mysql.LoginStatus{
 		UserId: user.Id,
 		Token:  token,
 		//Token:  utils.GenerateUUID(),
 	}
-	err := dao.NewLoginStatusDaoInstance().CreateLoginStatus(loginStatus)
+	err := mysql.NewLoginStatusDaoInstance().CreateLoginStatus(loginStatus)
 	if err != nil {
 		return nil, nil, err
 	}

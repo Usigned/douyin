@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"douyin/dao"
+	"douyin/dao/mysql"
 	"douyin/entity"
 	"douyin/service"
 	"douyin/utils"
@@ -36,7 +36,7 @@ func RelationActionFunc(userId, token, toUserId, actionType string) UserListResp
 	var uid int64
 	var err error
 	if userId == "" {
-		uid, err = dao.NewLoginStatusDaoInstance().QueryUserIdByToken(token)
+		uid, err = mysql.NewLoginStatusDaoInstance().QueryUserIdByToken(token)
 		if err != nil {
 			return ErrorRelationActionResponse(err)
 		}

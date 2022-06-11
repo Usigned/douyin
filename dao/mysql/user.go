@@ -1,11 +1,12 @@
-package dao
+package mysql
 
 // TODO
 
 import (
+	"douyin/utils"
+	"fmt"
 	"gorm.io/gorm"
 	"log"
-	"regexp"
 	"sync"
 )
 
@@ -94,12 +95,12 @@ func (*UserDao) QueryUserByName(name string) (*User, error) {
 
 func (*UserDao) QueryUserByToken(token string) (*User, error) {
 	var users *User //实例化对象
-	re, err := regexp.Compile("[A-Za-z0-9_\\-\u4e00-\u9fa5]+")
+	parseToken, err := utils.ParseToken(token)
 	if err != nil {
-		return nil, err
+		return nil, utils.Error{Msg: "invalid token! "}
 	}
-	name := re.FindAllString(token, 2)[0]
-	password := re.FindAllString(token, 2)[1]
+	name := parseToken.Username
+	password := parseToken.Password
 	err = db.Debug().Where("name = ? and password = ?", name, password).First(&users).Error
 	if err == gorm.ErrRecordNotFound {
 		return nil, err
@@ -108,7 +109,6 @@ func (*UserDao) QueryUserByToken(token string) (*User, error) {
 		//fmt.Println("record not found!")
 		return nil, err
 	}
-
 	return users, nil
 }
 
@@ -139,6 +139,7 @@ func (*UserDao) MaxId() (int64, error) {
 	result := db.Table("users").Last(&lastRec)
 	err := result.Error
 	if err != nil {
+		fmt.Println("errors happen")
 		return 0, err
 	}
 	return lastRec.Id, nil

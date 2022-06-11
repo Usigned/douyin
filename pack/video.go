@@ -1,11 +1,11 @@
 package pack
 
 import (
-	"douyin/dao"
+	"douyin/dao/mysql"
 	"douyin/entity"
 )
 
-func AuthorIds(videoModels []*dao.Video) []int64 {
+func AuthorIds(videoModels []*mysql.Video) []int64 {
 	if videoModels != nil {
 		var ids = make([]int64, 0, len(videoModels))
 		for _, videoModel := range videoModels {
@@ -16,7 +16,7 @@ func AuthorIds(videoModels []*dao.Video) []int64 {
 	return []int64{}
 }
 
-func Video(videoModel *dao.Video) *entity.Video {
+func Video(videoModel *mysql.Video) *entity.Video {
 	if videoModel != nil {
 		return &entity.Video{
 			Id:            videoModel.Id,
@@ -31,7 +31,7 @@ func Video(videoModel *dao.Video) *entity.Video {
 	return nil
 }
 
-func Videos(videoModels []*dao.Video) []*entity.Video {
+func Videos(videoModels []*mysql.Video) []*entity.Video {
 	if videoModels != nil {
 		var videos = make([]*entity.Video, 0, len(videoModels))
 		for _, model := range videoModels {

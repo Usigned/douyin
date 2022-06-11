@@ -13,7 +13,7 @@ import (
 )
 
 // 是否自动生成封面，需要配置环境，默认为否
-var useGeneratedCover = utils.UseGeneratedCover
+//var useGeneratedCover = utils.UseGeneratedCover
 
 func Publish(c *gin.Context) {
 	token := c.PostForm("token")
@@ -43,7 +43,7 @@ func PublishFunc(token, title string, data *multipart.FileHeader, c *gin.Context
 	filepath.Base(data.Filename)
 	fileName := utils.GenerateUUID()
 	videoFileName := fmt.Sprintf("%s%s", fileName, ext)
-	coverName := fmt.Sprintf("%s%s", fileName, ".jpg")
+	//coverName := fmt.Sprintf("%s%s", fileName, ".jpg")
 
 	// 判断文件夹是否存在
 	var dir = "./publish/"
@@ -60,16 +60,16 @@ func PublishFunc(token, title string, data *multipart.FileHeader, c *gin.Context
 	// TODO 目前是数据库硬编码ip:port，后续可改成动态
 	playUrl := utils.VideoUrlPrefix + videoFileName
 	//封面
-	var coverUrl string
-	if useGeneratedCover {
-		coverUrl = utils.VideoUrlPrefix + coverName
-		// generate video cover
-		coverFilePath := filepath.Join(dir, coverName)
-		utils.ReadFrameAsJpeg(saveFile, 1, coverFilePath)
-	} else {
-		coverUrl = utils.DefaultCoverUrl
-	}
-
+	//var coverUrl string
+	//if useGeneratedCover {
+	//	coverUrl = utils.VideoUrlPrefix + coverName
+	//	// generate video cover
+	//	coverFilePath := filepath.Join(dir, coverName)
+	//	utils.ReadFrameAsJpeg(saveFile, 1, coverFilePath)
+	//} else {
+	//	coverUrl = utils.DefaultCoverUrl
+	//}
+	coverUrl := utils.DefaultCoverUrl
 	err = service.NewVideoServiceInstance().Publish(token, playUrl, coverUrl, title)
 	if err != nil {
 		return ErrorResponse(err)
